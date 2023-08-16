@@ -3,3 +3,6 @@
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
+
+
+from .endpoint import openai

@@ -5,7 +5,7 @@
 # @Software: PyCharm
 from typing import Literal, Optional
 
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel, root_validator, Field
 
 from ...error import ValidationError
 
@@ -18,14 +18,16 @@ class Message(BaseModel):
     role: Literal["system", "assistant", "user", "function"] = "user"
     content: str
     # speaker
-    name: Optional[str] = None
+    name: Optional[str] = Field(None, description="speaker name", regex=r"^[a-zA-Z0-9_]+$")
     # AI generated function call
     function_call: Optional[FunctionCall] = None
 
     @root_validator
-    def check(self, values):
+    def check(cls, values):
         if values.get("role") == "function" and not values.get("name"):
             raise ValidationError("sdk param validator:name must be specified when role is function")
+        # 过滤value中的None
+        return {k: v for k, v in values.items() if v is not None}
 
 
 class Function(BaseModel):
@@ -36,7 +38,7 @@ class Function(BaseModel):
     name: str
     description: Optional[str] = None
     parameters: Parameters = Parameters(type="object")
-    required: list[str]
+    required: list[str] = []
 
     def add_property(self, property_name: str,
                      property_type: Literal["string", "integer", "number", "boolean", "object"],

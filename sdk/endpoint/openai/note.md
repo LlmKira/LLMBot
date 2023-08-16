@@ -1,5 +1,7 @@
 # Function
 
+## 1. 样板代码
+
 ```python
 from typing import Literal
 
@@ -12,31 +14,66 @@ def get_current_weather(location: str, format: Literal["fahrenheit", "celsius"])
     """
 ```
 
-```
-[
-    {
-        'name': 'get_current_weather',
-        'description': 'Get the current weather',
-        'parameters': {
-            'type': 'object',
-            'properties': {
-                'location': {
-                    'description': 'The city and state, e.g. San Francisco, CA',
-                    'type': 'string'
-                },
-                'format': {
-                    'description': 'The temperature unit to use. Infer this from
-the users location.',
-                    'type': 'string',
-                    'enum': ('fahrenheit', 'celsius')
-                }
-            }
-        },
-        'required': ['location', 'format']
+### Pydantic 数据模型
+
+pydantic 的数据模型，不完全兼容 openapi
+
+```json5
+
+{
+  'title': 'Search',
+  'description': '测试搜索类型',
+  'type': 'object',
+  'properties': {
+    'keywords': {
+      'title': 'Keywords',
+      'description': '关键词',
+      'type': 'string'
+    },
+    'text': {
+      'title': 'Text',
+      'description': '文本',
+      'type': 'string'
     }
+  }
+}
+
+```
+
+## 标准化格式演示
+
+```json5
+[
+  {
+    'name': 'get_current_weather',
+    'description': 'Get the current weather',
+    'parameters': {
+      'type': 'object',
+      'properties': {
+        'location': {
+          'description': 'The city and state, e.g. San Francisco, CA',
+          'type': 'string'
+        },
+        'format': {
+          'description': 'The temperature unit to use. Infer this from the users location.',
+          'type': 'string',
+          'enum': [
+            'fahrenheit',
+            'celsius'
+          ]
+        }
+      }
+    },
+    'required': [
+      'location',
+      'format'
+    ]
+  }
 ]
 
 ```
+
+## 样板消息
 
 ```python
 example_messages = [

@@ -3,7 +3,7 @@
 # @Author  : sudoskys
 # @File    : action.py
 # @Software: PyCharm
-
+from typing import List
 
 import tiktoken
 from pydantic import BaseModel
@@ -52,7 +52,7 @@ class Tokenizer(object):
     def clear_cache(self):
         self.__encode_cache = {}
 
-    def num_tokens_from_messages(self, messages, model="gpt-3.5-turbo-0613") -> int:
+    def num_tokens_from_messages(self, messages: List[Message], model="gpt-3.5-turbo-0613") -> int:
         """Return the number of tokens used by a list of messages."""
         try:
             encoding = tiktoken.encoding_for_model(model)
@@ -85,7 +85,7 @@ class Tokenizer(object):
         num_tokens = 0
         for message in messages:
             num_tokens += tokens_per_message
-            for key, value in message.items():
+            for key, value in message.dict().items():
                 # 缓存获取 cache，减少重复 encode 次数
                 if value in self.__encode_cache:
                     _tokens = self.__encode_cache[value]
@@ -100,5 +100,3 @@ class Tokenizer(object):
 
 
 TokenizerObj = Tokenizer()
-
-
