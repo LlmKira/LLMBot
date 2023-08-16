@@ -40,6 +40,11 @@ pydantic 的数据模型，不完全兼容 openapi
 
 ```
 
+这点 langchain 相关开发有提到
+https://github.com/minimaxir/simpleaichat/issues/40
+https://github.com/minimaxir/simpleaichat/blob/1dead657731e0d2a4df608a7aa94b86322412851/examples/notebooks/schema_ttrpg.ipynb
+https://api.python.langchain.com/en/latest/_modules/langchain/tools/convert_to_openai.html#format_tool_to_openai_function
+
 ## 标准化格式演示
 
 ```json5
