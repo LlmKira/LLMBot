@@ -4,18 +4,38 @@
 # @File    : func_call.py
 # @Software: PyCharm
 
-from pydantic import BaseModel, Field
+
+from sdk.endpoint.openai import Function
+
+from sdk.func_call import BaseTool, listener
+
+search = Function(name="get_current_weather", description="Get the current weather")
+search.add_property(
+    property_name="location",
+    property_description="The city and state, e.g. San Francisco, CA",
+    property_type="string",
+    required=True
+)
 
 
-class Search(BaseModel):
+@listener(function=search)
+class SearchTool(BaseTool):
     """
-    测试搜索类型
+    搜索工具
     """
-    keywords: str = Field(None, description="关键词")
-    text: str = Field(None, description="文本")
+    function: Function = search
 
-    def run(self):
-        return self.keywords + self.text
+    def func_message(self, message_text):
+        """
+        如果合格则返回message，否则返回None，表示不处理
+        """
+        if "搜索" in message_text:
+            return self.function
+        else:
+            return None
 
-
-print(Search.schema())
+    async def __call__(self, *args, **kwargs):
+        """
+        处理message，返回message
+        """
+        return "搜索成功"

@@ -112,3 +112,8 @@ example_messages = [
     },
 ]
 ```
+
+
+## 备注
+
+`Open AI does not support an array type`

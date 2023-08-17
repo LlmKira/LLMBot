@@ -31,6 +31,11 @@ class Message(BaseModel):
 
 
 class Function(BaseModel):
+    """
+    函数定义体。
+    供外部模组定义并注册函数
+    """
+
     class Parameters(BaseModel):
         type: str = "object"
         properties: dict = {}
@@ -53,3 +58,11 @@ class Function(BaseModel):
             self.parameters.properties[property_name]['enum'] = tuple(enum)
         if required:
             self.required.append(property_name)
+
+    def parse_schema_to_properties(self, schema: BaseModel):
+        """
+        解析pydantic的schema
+        传入一个pydantic的schema，解析成properties
+        参数可以被数据模型所定义
+        """
+        self.parameters.properties = schema.schema()["properties"]
