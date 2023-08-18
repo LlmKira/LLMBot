@@ -11,7 +11,7 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
 from telebot.formatting import escape_markdown
 
-from schema import TaskHeader
+from schema import TaskHeader, RawMessage
 from sdk.func_call import TOOL_MANAGER
 from sdk.schema import Function
 from setting.telegram import BotSetting
@@ -45,11 +45,27 @@ class TelegramBotRunner(object):
             _got = await bot.get_chat_member(message.chat.id, message.from_user.id)
             return _got.status in ['administrator', 'creator']
 
+        async def telegram_to_file(file):
+            name = file.file_id
+            _data = await bot.download_file(file.file_id)
+            if isinstance(file, types.PhotoSize):
+                name = f"{file.file_id}.jpg"
+            if isinstance(file, types.Document):
+                name = file.file_name
+            return await RawMessage.upload_file(name=name, data=_data)
+
         async def create_task(message: types.Message, funtion_enable: bool = False):
+            _file = []
+            if message.photo:
+                _file.append(await telegram_to_file(message.photo[-1]))
+            if message.document:
+                if message.document.file_size < 1024 * 1024 * 10:
+                    _file.append(await telegram_to_file(message.document))
             logger.info(f"create task from {message.chat.id} {message.text} {funtion_enable}")
             return await TelegramTask.send_task(
                 task=TaskHeader.from_telegram(
                     message,
+                    file=_file,
                     task_meta=TaskHeader.Meta(function_enable=funtion_enable)
                 )
             )

@@ -22,15 +22,17 @@ def md5_for_file(f, block_size=2 ** 20):
     return md5.digest()
 
 
-class RawMessage(BaseModel):
-    class File(BaseModel):
-        file_id: str = Field(None, description="文件ID")
-        file_name: str = Field(None, description="文件名")
+class File(BaseModel):
+    file_id: str = Field(None, description="文件ID")
+    file_name: str = Field(None, description="文件名")
+    file_url: str = Field(None, description="文件URL")
 
+
+class RawMessage(BaseModel):
     user_id: int = Field(None, description="用户ID")
     chat_id: int = Field(None, description="群组ID")
     text: str = Field(None, description="文本")
-    file: List[File] = Field(None, description="文件")
+    file: List[File] = Field([], description="文件")
     created_at: int = Field(None, description="创建时间")
 
     class Config:
@@ -42,10 +44,10 @@ class RawMessage(BaseModel):
         return await cache.read_data(file_id)
 
     @staticmethod
-    async def upload_file(data):
+    async def upload_file(name, data):
         _key = str(md5_for_file(data))
         await cache.set_data(key=_key, value=data, timeout=60 * 60 * 24 * 7)
-        return _key
+        return File(file_id=_key, file_name=name)
 
     @classmethod
     def from_telegram(cls, message: Union[types.Message, types.CallbackQuery]):
@@ -94,10 +96,12 @@ class TaskHeader(BaseModel):
     message: List[RawMessage] = Field(None, description="消息内容")
 
     @classmethod
-    def from_telegram(cls, message: Union[types.Message], task_meta: Meta, reply: bool = True):
+    def from_telegram(cls, message: Union[types.Message], task_meta: Meta, file: List[File] = None, reply: bool = True):
         """
         从telegram消息中构建任务
         """
+        if file is None:
+            file = []
         if isinstance(message, types.Message):
             user_id = message.from_user.id
             chat_id = message.chat.id
@@ -117,6 +121,7 @@ class TaskHeader(BaseModel):
                 user_id=user_id,
                 chat_id=chat_id,
                 text=text,
+                file=file,
                 created_at=created_at
             )]
         )

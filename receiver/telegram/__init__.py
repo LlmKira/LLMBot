@@ -32,6 +32,25 @@ class TelegramSender(object):
 
     def forward(self, chat_id, reply_to_message_id, message: List[RawMessage]):
         for item in message:
+            for file_obj in item.file:
+                if file_obj.file_url:
+                    self.bot.send_document(
+                        chat_id=chat_id,
+                        document=file_obj.file_url,
+                        reply_to_message_id=reply_to_message_id,
+                        caption=file_obj.file_name
+                    )
+                    continue
+                _data = RawMessage.download_file(file_obj.file_id)
+                if not _data:
+                    logger.error(f"file download failed {file_obj.file_id}")
+                    continue
+                self.bot.send_document(
+                    chat_id=chat_id,
+                    document=(file_obj.file_name, _data),
+                    reply_to_message_id=reply_to_message_id,
+                    caption=file_obj.file_name
+                )
             self.bot.send_message(
                 chat_id=chat_id,
                 text=item.text,
