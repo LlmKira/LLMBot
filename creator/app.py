@@ -9,6 +9,7 @@ import sys
 from loguru import logger
 from telebot import util
 
+import plugins
 from telegram import TelegramBotRunner
 
 logger.remove()
@@ -26,6 +27,9 @@ telegram_bot = TelegramBotRunner().telegram()
 func = [telegram_bot.polling(non_stop=True, allowed_updates=util.update_types, skip_pending=False, timeout=60,
                              request_timeout=60)]
 
+# 初始化插件系统
+plugins.setup()
+
 
 async def main():
     await asyncio.gather(
@@ -34,7 +38,7 @@ async def main():
 
 
 for i in func:
-    logger.success(f"Bot start:{i.__name__}")
+    logger.success(f"Sender start:{i.__name__}")
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())

@@ -17,6 +17,7 @@ class BaseTool(ABC, BaseModel):
     基础工具类，所有工具类都应该继承此类
     """
     function: Function
+    keywords: List[str]
 
     @abstractmethod
     def func_message(self, message_text):
@@ -71,8 +72,11 @@ class ToolManager:
                 return name
         return None
 
-    def get_all_tool(self):
+    def get_all_tool(self) -> dict:
         return self.__tool
+
+    def get_all_function(self) -> dict:
+        return self.__function
 
     def run_all_check(self, message_text) -> List[Function]:
         """

@@ -12,6 +12,8 @@ from telebot.asyncio_storage import StateMemoryStorage
 from telebot.formatting import escape_markdown
 
 from schema import TaskHeader
+from sdk.func_call import TOOL_MANAGER
+from sdk.schema import Function
 from setting.telegram import BotSetting
 from task import Task
 
@@ -26,12 +28,18 @@ class TelegramBotRunner(object):
         self.proxy = BotSetting.proxy_address
 
     def telegram(self):
-        logger.success("Telegram Bot Start")
         bot = self.bot
         if self.proxy:
             from telebot import asyncio_helper
             asyncio_helper.proxy = self.proxy
-            logger.info("Proxy tunnels are being used!")
+            logger.info("TelegramBot proxy_tunnels being used!")
+
+        def is_command(text, command):
+            if text.startswith(f"{command} "):
+                return True
+            if text == command:
+                return True
+            return False
 
         async def is_admin(message: types.Message):
             _got = await bot.get_chat_member(message.chat.id, message.from_user.id)
@@ -56,12 +64,26 @@ class TelegramBotRunner(object):
             """
             自动响应私聊消息
             """
-            funtion_enable = False
             if not message.text:
                 return None
-            if message.text.startswith("/task"):
-                funtion_enable = True
-            return await create_task(message, funtion_enable=funtion_enable)
+            if is_command(text=message.text, command="/task"):
+                return await create_task(message, funtion_enable=True)
+            if is_command(text=message.text, command="/tool"):
+                _paper = ''
+                _tool = TOOL_MANAGER.get_all_function()
+                for name, c in _tool.items():
+                    c: Function
+                    _paper += f"{c.name} - {c.description}\n"
+                return await bot.reply_to(
+                    message,
+                    text=formatting.format_text(
+                        formatting.mbold("🔧 Tool List"),
+                        escape_markdown(_paper),
+                        separator="\n"
+                    ),
+                    parse_mode="MarkdownV2"
+                )
+            return await create_task(message, funtion_enable=False)
 
         @bot.message_handler(content_types=['text'], chat_types=['supergroup', 'group'])
         async def handle_group_msg(message: types.Message):
@@ -71,13 +93,6 @@ class TelegramBotRunner(object):
                 return await create_task(message, funtion_enable=False)
             if f"@{BotSetting.bot_username} " in message.text or message.text.endswith(f" @{BotSetting.bot_username}"):
                 return await create_task(message, funtion_enable=False)
-
-        @bot.message_handler(commands='tool', chat_types=['private', 'supergroup', 'group'])
-        async def listen_tool_command(message: types.Message):
-            """/tool - 工具列表
-            """
-            # TODO: 生成工具列表，完善插件系统
-            return logger.warning("工具列表")
 
         @bot.message_handler(commands='help', chat_types=['private', 'supergroup', 'group'])
         async def listen_help_command(message: types.Message):

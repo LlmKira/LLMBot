@@ -101,7 +101,7 @@ class TelegramReceiver(object):
             logger.exception(e)
             # return await message.ack()
             return await message.ack()
-        if _message.function_call:
+        if hasattr(_message, "function_call"):
             await __sender__.function(
                 chat_id=_task.receiver.chat_id,
                 reply_to_message_id=_task.receiver.message_id,

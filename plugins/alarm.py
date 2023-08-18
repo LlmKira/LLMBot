@@ -49,12 +49,13 @@ class AlarmTool(BaseTool):
     搜索工具
     """
     function: Function = alarm
+    keywords: list = ["闹钟", "提醒", "定时", "到点", '分钟']
 
     def func_message(self, message_text):
         """
         如果合格则返回message，否则返回None，表示不处理
         """
-        for i in ["闹钟", "提醒", "定时", "到点", '分钟']:
+        for i in self.keywords:
             if i in message_text:
                 return self.function
         return None
