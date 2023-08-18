@@ -3,21 +3,48 @@
 # @Author  : sudoskys
 # @File    : schema.py
 # @Software: PyCharm
+import hashlib
 from typing import Union, List, Any, Literal
 
 from pydantic import Field, BaseModel
 from telebot import types
 
+from cache.redis import cache
+
+
+def md5_for_file(f, block_size=2 ** 20):
+    md5 = hashlib.md5()
+    while True:
+        data = f.read(block_size)
+        if not data:
+            break
+        md5.update(data)
+    return md5.digest()
+
 
 class RawMessage(BaseModel):
+    class File(BaseModel):
+        file_id: str = Field(None, description="文件ID")
+        file_name: str = Field(None, description="文件名")
+
     user_id: int = Field(None, description="用户ID")
     chat_id: int = Field(None, description="群组ID")
     text: str = Field(None, description="文本")
+    file: File = Field(File(), description="文件ID")
     created_at: int = Field(None, description="创建时间")
 
     class Config:
         arbitrary_types_allowed = True
         extra = "allow"
+
+    async def download_file(self):
+        return await cache.read_data(self.file.file_id)
+
+    async def upload_file(self, data):
+        _key = str(md5_for_file(data))
+        await cache.set_data(key=_key, value=data, timeout=60 * 60 * 24 * 7)
+        self.file.file_id = _key
+        return _key
 
     @classmethod
     def from_telegram(cls, message: Union[types.Message, types.CallbackQuery]):
