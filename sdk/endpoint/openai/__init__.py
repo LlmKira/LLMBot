@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from pydantic import BaseModel, root_validator, validator, Field, HttpUrl, BaseSettings
 
 from .action import Tokenizer, TokenizerObj
-from .schema import Message, Function
+from sdk.schema import Message, Function
 from ...error import ValidationError
 from ...network import request
 
@@ -144,7 +144,7 @@ class Openai(BaseModel):
         # Clear tokenizer encode cache
         # TokenizerObj.clear_cache()
         _data = self.dict(exclude_none=True, exclude={"config", "echo"})
-        print(_data)
+        # print(_data)
         # 返回请求
         return await request(
             method="POST",

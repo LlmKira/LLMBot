@@ -7,6 +7,8 @@
 def help_message():
     return """
     /help - 帮助
-    /start - 开始
-    /ping - 测试
+    /chat - 聊天
+    /task - 任务
+    /tool - 工具列表
+    /bind - 绑定发送人
     """

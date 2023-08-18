@@ -59,11 +59,11 @@ if __name__ == '__main__':
     ]
     message = []
     for i in _list:
-        message.append(openai.schema.Message(**i))
+        message.append(sdk.schema.Message(**i))
     logger.debug(message)
     driver = openai.Openai.Driver()
     logger.debug(driver)
-    search = openai.schema.Function(name="get_current_weather", description="Get the current weather")
+    search = sdk.schema.Function(name="get_current_weather", description="Get the current weather")
     search.add_property(
         property_name="location",
         property_description="The city and state, e.g. San Francisco, CA",

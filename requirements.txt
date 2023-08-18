@@ -10,3 +10,4 @@ elara
 redis>=4.5.4
 shortuuid
 tiktoken
+pika

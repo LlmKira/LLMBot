@@ -49,11 +49,23 @@ class ToolManager:
         self.__tool[name] = tool
         self.__function[name] = function
 
-    def find_tool(self, name) -> Optional[Type[BaseTool]]:
+    def get_tool(self, name: str) -> Optional[Type[BaseTool]]:
         return self.__tool.get(name)
 
-    def find_function(self, name) -> Optional[Function]:
+    def find_tool(self, tool: Type[BaseTool]) -> Optional[str]:
+        for name, item in self.__tool.items():
+            if item == tool:
+                return name
+        return None
+
+    def get_function(self, name: str) -> Optional[Function]:
         return self.__function.get(name)
+
+    def find_function(self, func: Function) -> Optional[str]:
+        for name, function in self.__function.items():
+            if function == func:
+                return name
+        return None
 
     def get_all_tool(self):
         return self.__tool
@@ -65,7 +77,7 @@ class ToolManager:
         _pass = []
         for name, tool in self.get_all_tool().items():
             if tool.func_message(**kwargs):
-                _pass.append(self.find_function(name))
+                _pass.append(self.get_function(name))
         return _pass
 
 
@@ -85,7 +97,7 @@ def listener(function: Function):
 
         def wrapper(*args, **kwargs):
             # 调用执行函数，中间人
-            return func(*args)
+            return func(**kwargs)
 
         return wrapper
 

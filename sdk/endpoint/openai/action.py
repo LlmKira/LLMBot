@@ -8,42 +8,7 @@ from typing import List
 import tiktoken
 from pydantic import BaseModel
 
-from .schema import Message
-
-
-class Scraper(BaseModel):
-    """
-    刮削器
-    始终按照顺序排列，削除得分低的条目
-    Scraper is a class that sorts a list of messages by their score.
-    """
-
-    class Sorter(BaseModel):
-        message: Message
-        # 得分
-        score: float
-        # 顺序
-        order: int
-
-    # 消息列表
-    messages: list[Sorter] = []
-    # 最大消息数
-    max_messages: int = 10
-
-    # 方法：添加消息
-    def add_message(self, message: Message, score: float, order: int):
-        self.messages.append(self.Sorter(message=message, score=score, order=order))
-        self.messages.sort(key=lambda x: x.score, reverse=True)
-        if len(self.messages) > self.max_messages:
-            self.messages.pop()
-
-    # 方法：获取消息
-    def get_messages(self) -> list[Message]:
-        return [message.message for message in self.messages]
-
-    # 方法：获取消息数
-    def get_num_messages(self) -> int:
-        return len(self.messages)
+from sdk.schema import Message
 
 
 class Tokenizer(object):
@@ -100,3 +65,51 @@ class Tokenizer(object):
 
 
 TokenizerObj = Tokenizer()
+
+
+class Scraper(BaseModel):
+    """
+    刮削器
+    始终按照顺序排列，削除得分低的条目
+    Scraper is a class that sorts a list of messages by their score.
+    """
+
+    class Sorter(BaseModel):
+        message: Message
+        # 得分
+        score: float
+        # 顺序
+        order: int
+
+    # 消息列表
+    messages: list[Sorter] = []
+    # 最大消息数
+    max_messages: int = 100
+
+    # 方法：添加消息
+    def add_message(self, message: Message, score: float, order: int):
+        self.messages.append(self.Sorter(message=message, score=score, order=order))
+        # 按照顺序排序
+        self.messages.sort(key=lambda x: x.order)
+        if len(self.messages) > self.max_messages:
+            self.messages.pop()
+
+    # 方法：获取消息
+    def get_messages(self) -> list[Message]:
+        # 按照顺序排序
+        self.messages.sort(key=lambda x: x.order)
+        return [message.message for message in self.messages]
+
+    # 方法：获取消息数
+    def get_num_messages(self) -> int:
+        return len(self.messages)
+
+    # 方法：清除消息到负载
+    def reduce_messages(self, limit: int = 2048):
+        if TokenizerObj.num_tokens_from_messages(self.get_messages()) > limit:
+            # 从最低得分开始删除
+            self.messages.sort(key=lambda x: x.score)
+            while TokenizerObj.num_tokens_from_messages(self.get_messages()) > limit:
+                self.messages.pop(0)
+        # 按照顺序排序
+        self.messages.sort(key=lambda x: x.order)

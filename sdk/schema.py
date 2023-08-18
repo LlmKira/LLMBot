@@ -7,7 +7,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, root_validator, Field
 
-from ...error import ValidationError
+from sdk.error import ValidationError
 
 
 class Message(BaseModel):
@@ -18,7 +18,7 @@ class Message(BaseModel):
     role: Literal["system", "assistant", "user", "function"] = "user"
     content: str
     # speaker
-    name: Optional[str] = Field(None, description="speaker name", regex=r"^[a-zA-Z0-9_]+$")
+    name: Optional[str] = Field(None, description="speaker_name", regex=r"^[a-zA-Z0-9_]+$")
     # AI generated function call
     function_call: Optional[FunctionCall] = None
 
