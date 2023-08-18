@@ -30,20 +30,21 @@ class RawMessage(BaseModel):
     user_id: int = Field(None, description="用户ID")
     chat_id: int = Field(None, description="群组ID")
     text: str = Field(None, description="文本")
-    file: File = Field(File(), description="文件ID")
+    file: List[File] = Field(None, description="文件")
     created_at: int = Field(None, description="创建时间")
 
     class Config:
         arbitrary_types_allowed = True
         extra = "allow"
 
-    async def download_file(self):
-        return await cache.read_data(self.file.file_id)
+    @staticmethod
+    async def download_file(file_id):
+        return await cache.read_data(file_id)
 
-    async def upload_file(self, data):
+    @staticmethod
+    async def upload_file(data):
         _key = str(md5_for_file(data))
         await cache.set_data(key=_key, value=data, timeout=60 * 60 * 24 * 7)
-        self.file.file_id = _key
         return _key
 
     @classmethod
