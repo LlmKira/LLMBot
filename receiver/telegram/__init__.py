@@ -5,6 +5,7 @@
 # @Software: PyCharm
 from typing import List
 
+from aio_pika.abc import AbstractIncomingMessage
 from telebot import TeleBot
 
 from receiver.core import OpenaiMiddleware
@@ -42,21 +43,20 @@ class TelegramReceiver(object):
     def __init__(self):
         self.task = Task(queue=__receiver__)
 
-    def callback(self, data, ack):
+    async def on_message(self, message: AbstractIncomingMessage):
         # 解析数据
-        _task = TaskHeader.parse_obj(data)
+        _task = TaskHeader.parse_raw(message.body)
+        print(" [x] Received %r" % _task)
         _llm = OpenaiMiddleware(task=_task)
-
-        async def func():
-            await _llm.func_message()
-
-        print(_task)
+        _message = await _llm.func_message()
+        print(_message)
         __sender__.bot.send_message(
             chat_id=_task.receiver.chat_id,
-            text="received",
+            text=_message.content,
             reply_to_message_id=_task.receiver.message_id
         )
-        ack()
+        print(" [x] Done")
+        await message.ack()
 
     async def telegram(self):
-        self.task.consuming_task(self.callback)
+        await self.task.consuming_task(self.on_message)

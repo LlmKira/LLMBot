@@ -28,6 +28,7 @@ class RabbitMQ(BaseSettings):
                 values['amqp_dsn']
             ))
         except Exception as e:
+            logger.error('RabbitMQ connect failed, pls set AMQP_DSN in .env')
             raise ValueError('RabbitMQ connect failed')
         else:
             logger.success(f"RabbitMQ connect success")

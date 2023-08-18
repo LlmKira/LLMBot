@@ -8,10 +8,11 @@ __version__ = "0.0.1"
 from typing import Union, List, Optional, Literal
 
 from dotenv import load_dotenv
+from loguru import logger
 from pydantic import BaseModel, root_validator, validator, Field, HttpUrl, BaseSettings
 
-from .action import Tokenizer, TokenizerObj
 from sdk.schema import Message, Function
+from .action import Tokenizer, TokenizerObj
 from ...error import ValidationError
 from ...network import request
 
@@ -121,6 +122,25 @@ class Openai(BaseModel):
                 raise ValidationError("function only support model: {}".format(MODEL.__args__))
         return values
 
+    @staticmethod
+    def parse_single_reply(response: dict):
+        """
+        解析响应
+        :param response:
+        :return:
+        """
+        # check
+        if not response.get("choices"):
+            raise ValidationError("message is empty")
+        _message = Message.parse_obj(response.get("choices")[0].get("message"))
+        return _message
+
+    @staticmethod
+    def parse_usage(response: dict):
+        if not response.get("usage"):
+            raise ValidationError("usage is empty")
+        return response.get("usage")
+
     async def create(self,
                      **kwargs
                      ):
@@ -144,9 +164,8 @@ class Openai(BaseModel):
         # Clear tokenizer encode cache
         # TokenizerObj.clear_cache()
         _data = self.dict(exclude_none=True, exclude={"config", "echo"})
-        # print(_data)
         # 返回请求
-        return await request(
+        _response = await request(
             method="POST",
             url=self.config.endpoint,
             data=_data,
@@ -157,3 +176,6 @@ class Openai(BaseModel):
             proxy=self.config.proxy_address,
             json_body=True
         )
+        if self.echo:
+            logger.debug(f"openai response: {_response}")
+        return _response

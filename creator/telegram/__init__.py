@@ -38,7 +38,8 @@ class TelegramBotRunner(object):
             return _got.status in ['administrator', 'creator']
 
         async def create_task(message: types.Message, funtion_enabled: bool = False):
-            return TelegramTask.send_task(
+            logger.info(f"create task from {message.chat.id} {message.from_user.full_name}")
+            return await TelegramTask.send_task(
                 task=TaskHeader.from_telegram(
                     message,
                     task_meta=TaskHeader.Meta(function_enabled=funtion_enabled)

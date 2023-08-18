@@ -59,15 +59,24 @@ class OpenaiMiddleware(object):
         for _msg in _buffer:
             self.message_history.add_message(message=_msg)
 
-    async def func_message(self):
+    async def func_message(self) -> Message:
         """
         处理消息转换和调用工具
         """
         model_name = "gpt-3.5-turbo-0613"
         self.scraper.reduce_messages(limit=openai.Openai.get_token_limit(model=model_name))
         message = self.scraper.get_messages()
+        _functions = self.functions if self.functions else None
+
         # 消息缓存读取和转换
-        endpoint = openai.Openai(config=self.driver, model=model_name, messages=message, functions=self.functions)
+        endpoint = openai.Openai(config=self.driver, model=model_name, messages=message, functions=_functions)
+
         # 调用Openai
         result = await endpoint.create()
+        _message = openai.Openai.parse_single_reply(response=result)
+
+        # write back
+        self.message_history.add_message(message=_message)
+
         logger.info(f"openai result:{result}")
+        return _message

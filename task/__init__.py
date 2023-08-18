@@ -29,7 +29,10 @@ class Task(object):
         async with connection:
             channel = await connection.channel()
             message = Message(
-                task.json(), delivery_mode=DeliveryMode.PERSISTENT,
+                task.json().encode(), delivery_mode=DeliveryMode.PERSISTENT,
+            )
+            await channel.declare_queue(
+                self.queue_name, durable=True,
             )
             # Sending the message
             await channel.default_exchange.publish(
@@ -51,20 +54,3 @@ class Task(object):
             )
             await queue.consume(func)
             await asyncio.Future()  # run forever
-
-
-"""
-
-    def consuming_task(self, func: callable):
-        def callback(ch, method, properties, body):
-            logger.debug("消费者接收到了任务：%r" % body.decode("utf8"))
-            _data = TaskHeader.parse_raw(body)
-
-            def _ack():
-                ch.basic_ack(delivery_tag=method.delivery_tag)
-
-            func(_data, _ack)
-
-        self.channel.basic_consume(on_message_callback=callback, queue=self.queue_name, auto_ack=False)
-        self.channel.start_consuming()
-"""
