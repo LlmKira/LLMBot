@@ -41,9 +41,24 @@ docker ps -l
 - ▶️ 运行
 
 ```bash
-python creator/app.py
-python receiver/app.py
+python3 creator/app.py
+python3 receiver/app.py
 ```
+
+## 基础命令
+
+    /help - 帮助
+    /chat - 聊天
+    /task - 任务
+    /tool - 工具列表
+    /bind - 绑定发送人
+
+## TODO
+
+- [x] 插件系统
+- [x] 定时系统
+- [ ] 订阅
+- [ ] 插件的文件支持
 
 ## 💻 如何开发？
 
