@@ -24,8 +24,15 @@ logger.add(sink='run.log',
 # 注册机器人事件
 telegram_bot = TelegramBotRunner().telegram()
 
-func = [telegram_bot.polling(non_stop=True, allowed_updates=util.update_types, skip_pending=False, timeout=60,
-                             request_timeout=60)]
+func = [
+    telegram_bot.polling(
+        non_stop=True,
+        allowed_updates=util.update_types,
+        skip_pending=False,
+        timeout=60,
+        request_timeout=60
+    )
+]
 
 # 初始化插件系统
 plugins.setup()
