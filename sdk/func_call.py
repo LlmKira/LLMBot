@@ -5,7 +5,7 @@
 # @Software: PyCharm
 import re
 from abc import ABC, abstractmethod
-from typing import Optional, Type, List
+from typing import Optional, Type, List, Union
 
 from loguru import logger
 from pydantic import BaseModel
@@ -21,6 +21,15 @@ class BaseTool(ABC, BaseModel):
     keywords: List[str]
     pattern: Optional[re.Pattern] = None
 
+    @abstractmethod
+    def pre_check(self) -> Union[bool, str]:
+        """
+        预检查，如果不合格则返回False，合格则返回True
+        返回字符串表示不合格，且有原因
+        """
+        return ...
+
+    @abstractmethod
     def func_message(self, message_text):
         """
         如果合格则返回message，否则返回None，表示不处理
@@ -37,6 +46,9 @@ class BaseTool(ABC, BaseModel):
 
     @abstractmethod
     async def failed(self, platform, receiver, reason):
+        """
+        处理失败
+        """
         return ...
 
     @abstractmethod
@@ -106,8 +118,12 @@ def listener(function: Function):
             raise TypeError(f"listener function must be subclass of BaseTool, not {func.__name__}")
 
         # 注册进工具管理器
-        TOOL_MANAGER.add_tool(name=function.name, function=function, tool=func)
-        logger.info(f"Function loaded success:{function.name}")
+        _check = func().pre_check()
+        if _check is True:
+            TOOL_MANAGER.add_tool(name=function.name, function=function, tool=func)
+            logger.info(f"Function loaded success:{function.name}")
+        else:
+            logger.info(f"Function loaded failed:{function.name}, reason:{_check}")
 
         def wrapper(*args, **kwargs):
             # 调用执行函数，中间人

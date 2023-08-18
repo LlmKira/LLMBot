@@ -53,6 +53,9 @@ class AlarmTool(BaseTool):
     keywords: list = ["闹钟", "提醒", "定时", "到点", '分钟']
     pattern = re.compile(r"(\d+)(分钟|小时|天|周|月|年)后提醒我(.*)")
 
+    def pre_check(self):
+        return True
+
     def func_message(self, message_text):
         """
         如果合格则返回message，否则返回None，表示不处理
