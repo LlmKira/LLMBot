@@ -4,6 +4,7 @@
 # @File    : schema.py
 # @Software: PyCharm
 import hashlib
+from io import BytesIO
 from typing import Union, List, Any, Literal
 
 from pydantic import Field, BaseModel
@@ -12,14 +13,26 @@ from telebot import types
 from cache.redis import cache
 
 
-def md5_for_file(f, block_size=2 ** 20):
-    md5 = hashlib.md5()
-    while True:
-        data = f.read(block_size)
-        if not data:
-            break
-        md5.update(data)
-    return md5.digest()
+def generate_md5_short_id(data):
+    # 检查输入数据是否是一个文件
+    is_file = False
+    if isinstance(data, str):
+        is_file = True
+    if isinstance(data, BytesIO):
+        data = data.getvalue()
+    # 计算 MD5 哈希值
+    md5_hash = hashlib.md5()
+    if is_file:
+        with open(data, "rb") as file:
+            for chunk in iter(lambda: file.read(4096), b""):
+                md5_hash.update(chunk)
+    else:
+        md5_hash.update(data)
+    # 获取哈希值的 16 进制表示
+    hex_digest = md5_hash.hexdigest()
+    # 生成唯一的短ID
+    short_id = hex_digest[:8]
+    return short_id
 
 
 class File(BaseModel):
@@ -45,7 +58,7 @@ class RawMessage(BaseModel):
 
     @staticmethod
     async def upload_file(name, data):
-        _key = str(md5_for_file(data))
+        _key = str(generate_md5_short_id(data))
         await cache.set_data(key=_key, value=data, timeout=60 * 60 * 24 * 7)
         return File(file_id=_key, file_name=name)
 
@@ -96,19 +109,30 @@ class TaskHeader(BaseModel):
     message: List[RawMessage] = Field(None, description="消息内容")
 
     @classmethod
-    def from_telegram(cls, message: Union[types.Message], task_meta: Meta, file: List[File] = None, reply: bool = True):
+    def from_telegram(cls, message: Union[types.Message],
+                      task_meta: Meta,
+                      file: List[File] = None,
+                      reply: bool = True,
+                      hide_file_info: bool = False
+                      ):
         """
         从telegram消息中构建任务
         """
+        _file_name = []
         if file is None:
             file = []
+        else:
+            for _file in file:
+                _file_name.append(f"![{_file.file_name}]")
         if isinstance(message, types.Message):
             user_id = message.from_user.id
             chat_id = message.chat.id
-            text = message.text
+            text = message.text if message.text else message.caption
             created_at = message.date
         else:
             raise ValueError(f"Unknown message type {type(message)}")
+        if not hide_file_info:
+            text += "\n" + "\n".join(_file_name)
         return cls(
             task_meta=task_meta,
             receiver=cls.Location(
@@ -127,7 +151,7 @@ class TaskHeader(BaseModel):
         )
 
     @classmethod
-    def from_function(cls, parent_call: Any, task_meta: Meta, receiver: Location):
+    def from_function(cls, parent_call: Any, task_meta: Meta, receiver: Location, message: List[RawMessage] = None):
         """
         从 Openai LLM Task中构建任务
         'function_call': {'name': 'set_alarm_reminder', 'arguments': '{\n  "delay": "5",\n  "content": "该吃饭了"\n}'}}
@@ -136,5 +160,5 @@ class TaskHeader(BaseModel):
         return cls(
             task_meta=task_meta,
             receiver=receiver,
-            message=[]
+            message=message
         )

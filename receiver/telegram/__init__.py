@@ -13,6 +13,7 @@ from receiver import function
 from receiver.middleware import OpenaiMiddleware
 from schema import TaskHeader, RawMessage
 from sdk.schema import Message
+from sdk.utils import sync
 from setting.telegram import BotSetting
 from task import Task
 
@@ -41,7 +42,7 @@ class TelegramSender(object):
                         caption=file_obj.file_name
                     )
                     continue
-                _data = RawMessage.download_file(file_obj.file_id)
+                _data = sync(RawMessage.download_file(file_obj.file_id))
                 if not _data:
                     logger.error(f"file download failed {file_obj.file_id}")
                     continue
@@ -82,6 +83,7 @@ class TelegramSender(object):
                 parent_call=message,
                 task_meta=task.task_meta,
                 receiver=receiver,
+                message=task.message
             )
         )
 

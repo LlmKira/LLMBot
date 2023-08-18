@@ -15,7 +15,9 @@ from sdk.endpoint.openai import Function
 from sdk.func_call import BaseTool, listener
 from task import Task
 
-alarm = Function(name="set_alarm_reminder", description="Set a timed reminder")
+__plugin_name__ = "set_alarm_reminder"
+
+alarm = Function(name=__plugin_name__, description="Set a timed reminder")
 alarm.add_property(
     property_name="delay",
     property_description="The delay time, in minutes",
@@ -78,7 +80,7 @@ class AlarmTool(BaseTool):
                     task_meta=TaskHeader.Meta(no_future_action=True,
                                               callback=TaskHeader.Meta.Callback(
                                                   role="function",
-                                                  name="set_alarm_reminder"
+                                                  name=__plugin_name__
                                               ),
                                               ),
                     message=[
@@ -93,7 +95,7 @@ class AlarmTool(BaseTool):
         except Exception as e:
             logger.error(e)
 
-    async def run(self, receiver: TaskHeader.Location, arg, **kwargs):
+    async def run(self, task: TaskHeader, receiver: TaskHeader.Location, arg, **kwargs):
         """
         处理message，返回message
         """
@@ -107,7 +109,7 @@ class AlarmTool(BaseTool):
                         task_meta=TaskHeader.Meta(no_future_action=True,
                                                   callback=TaskHeader.Meta.Callback(
                                                       role="function",
-                                                      name="set_alarm_reminder"
+                                                      name=__plugin_name__
                                                   ),
                                                   ),
                         message=[

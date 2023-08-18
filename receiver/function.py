@@ -42,7 +42,7 @@ class FunctionReceiver(object):
         if not _tool:
             logger.warning(f"not found function {_function.function_call.name}")
             return None
-        await _tool().run(receiver=_task.receiver, arg=_arg)
+        await _tool().run(task=_task, receiver=_task.receiver, arg=_arg)
 
     async def function(self):
         await self.task.consuming_task(self.on_message)

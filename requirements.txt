@@ -12,3 +12,5 @@ shortuuid
 tiktoken
 pika
 apscheduler
+pillow
+nest-asyncio

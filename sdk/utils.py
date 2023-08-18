@@ -9,6 +9,10 @@ bilibili_api.utils.sync
 import asyncio
 from typing import Coroutine
 
+import nest_asyncio
+
+nest_asyncio.apply()
+
 
 def __ensure_event_loop():
     try:

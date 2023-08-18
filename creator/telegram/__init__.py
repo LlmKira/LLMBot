@@ -47,12 +47,13 @@ class TelegramBotRunner(object):
 
         async def telegram_to_file(file):
             name = file.file_id
-            _data = await bot.download_file(file.file_id)
+            _file_info = await bot.get_file(file.file_id)
+            downloaded_file = await bot.download_file(_file_info.file_path)
             if isinstance(file, types.PhotoSize):
-                name = f"{file.file_id}.jpg"
+                name = f"{_file_info.file_id}.jpg"
             if isinstance(file, types.Document):
                 name = file.file_name
-            return await RawMessage.upload_file(name=name, data=_data)
+            return await RawMessage.upload_file(name=name, data=downloaded_file)
 
         async def create_task(message: types.Message, funtion_enable: bool = False):
             _file = []
@@ -61,7 +62,7 @@ class TelegramBotRunner(object):
             if message.document:
                 if message.document.file_size < 1024 * 1024 * 10:
                     _file.append(await telegram_to_file(message.document))
-            logger.info(f"create task from {message.chat.id} {message.text} {funtion_enable}")
+            logger.info(f"telegram:create task from {message.chat.id} {message.text} funtion_enable:{funtion_enable}")
             return await TelegramTask.send_task(
                 task=TaskHeader.from_telegram(
                     message,
@@ -75,11 +76,12 @@ class TelegramBotRunner(object):
             # TODO: 自动订阅系统
             return logger.warning("订阅系统")
 
-        @bot.message_handler(content_types=['text'], chat_types=['private'])
+        @bot.message_handler(content_types=['text', 'photo', 'document'], chat_types=['private'])
         async def handle_private_msg(message: types.Message):
             """
             自动响应私聊消息
             """
+            message.text = message.text if message.text else message.caption
             if not message.text:
                 return None
             if is_command(text=message.text, command="/task"):
@@ -101,8 +103,13 @@ class TelegramBotRunner(object):
                 )
             return await create_task(message, funtion_enable=False)
 
-        @bot.message_handler(content_types=['text'], chat_types=['supergroup', 'group'])
+        @bot.message_handler(content_types=['text', 'photo', 'document'], chat_types=['supergroup', 'group'])
         async def handle_group_msg(message: types.Message):
+            """
+            自动响应群组消息
+            """
+
+            message.text = message.text if message.text else message.caption
             if not message.text:
                 return None
             if message.text.startswith("/chat"):

@@ -52,7 +52,7 @@ class BaseTool(ABC, BaseModel):
         return ...
 
     @abstractmethod
-    async def run(self, receiver, arg, **kwargs):
+    async def run(self, task, receiver, arg, **kwargs):
         """
         处理message，返回message
         """
@@ -125,7 +125,7 @@ def listener(function: Function):
         else:
             logger.info(f"Function loaded failed:{function.name}, reason:{_check}")
 
-        def wrapper(*args, **kwargs):
+        async def wrapper(*args, **kwargs):
             # 调用执行函数，中间人
             return func(**kwargs)
 
