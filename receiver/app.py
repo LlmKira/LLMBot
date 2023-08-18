@@ -7,15 +7,26 @@ import asyncio
 
 from loguru import logger
 
+import plugins
+from function import FunctionReceiver
+from aps import aps_start
 from telegram import TelegramReceiver
 
-func = [TelegramReceiver().telegram()]
+func = [
+    aps_start(),
+    FunctionReceiver().function(),
+    TelegramReceiver().telegram()
+]
+
+# 初始化插件系统
+plugins.setup()
 
 
 async def main():
     await asyncio.gather(
         *func
     )
+
 
 for i in func:
     logger.success(f"Receiver start:{i.__name__}")

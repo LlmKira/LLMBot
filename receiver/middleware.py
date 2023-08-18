@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2023/8/18 上午9:37
 # @Author  : sudoskys
-# @File    : core.py
+# @File    : middleware.py
 # @Software: PyCharm
-from typing import List
+from typing import List, Literal
 
 from loguru import logger
 
@@ -27,8 +27,21 @@ class OpenaiMiddleware(object):
         self.functions = []
         self.task = task
         self.message_history = RedisChatMessageHistory(session_id=str(task.receiver.user_id))
+
+    def create(self):
         # 先拉取记录再转换
         self.create_message()
+        return self
+
+    def write_back(self,
+                   name: str,
+                   message_list: List[RawMessage],
+                   role: Literal["user", "system", "function", "assistant"] = "user"):
+        """
+        写回消息
+        """
+        for message in message_list:
+            self.message_history.add_message(message=Message(role=role, name=name, content=message.text))
 
     def create_message(self):
         """
@@ -46,7 +59,7 @@ class OpenaiMiddleware(object):
             _buffer.append(Message(role="user", content=message.text))
             # 创建函数系统
             if self.task.task_meta.function_enable:
-                self.functions.extend(TOOL_MANAGER.run_all_check(message.text))
+                self.functions.extend(TOOL_MANAGER.run_all_check(message_text=message.text))
         # 刮削器合并消息
         _total = 0
         for i, _msg in enumerate(_history):
@@ -69,13 +82,18 @@ class OpenaiMiddleware(object):
         _functions = self.functions if self.functions else None
 
         # 消息缓存读取和转换
-        endpoint = openai.Openai(config=self.driver, model=model_name, messages=message, functions=_functions)
+        endpoint = openai.Openai(
+            config=self.driver,
+            model=model_name,
+            messages=message,
+            functions=_functions,
+            echo=True
+        )
 
         # 调用Openai
         result = await endpoint.create()
         _message = openai.Openai.parse_single_reply(response=result)
 
-        # write back
         self.message_history.add_message(message=_message)
 
         logger.info(f"openai result:{result}")

@@ -29,7 +29,11 @@ class BaseTool(ABC, BaseModel):
             return None
 
     @abstractmethod
-    async def __call__(self, *args, **kwargs):
+    async def failed(self, platform, receiver, reason):
+        return ...
+
+    @abstractmethod
+    async def run(self, receiver, arg, **kwargs):
         """
         处理message，返回message
         """
@@ -70,13 +74,13 @@ class ToolManager:
     def get_all_tool(self):
         return self.__tool
 
-    def run_all_check(self, **kwargs) -> List[Function]:
+    def run_all_check(self, message_text) -> List[Function]:
         """
         运行所有工具的检查，返回所有检查通过的 函数
         """
         _pass = []
         for name, tool in self.get_all_tool().items():
-            if tool.func_message(**kwargs):
+            if tool().func_message(message_text=message_text):
                 _pass.append(self.get_function(name))
         return _pass
 
@@ -93,7 +97,7 @@ def listener(function: Function):
 
         # 注册进工具管理器
         TOOL_MANAGER.add_tool(name=function.name, function=function, tool=func)
-        logger.success(f"Register tool {function.name} success")
+        logger.info(f"Function loaded success:{function.name}")
 
         def wrapper(*args, **kwargs):
             # 调用执行函数，中间人

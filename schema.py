@@ -3,7 +3,7 @@
 # @Author  : sudoskys
 # @File    : schema.py
 # @Software: PyCharm
-from typing import Union, List
+from typing import Union, List, Any, Literal
 
 from pydantic import Field, BaseModel
 from telebot import types
@@ -43,7 +43,17 @@ class RawMessage(BaseModel):
 
 class TaskHeader(BaseModel):
     class Meta(BaseModel):
+        class Callback(BaseModel):
+            role: Literal["user", "system", "function", "assistant"] = Field("user", description="角色")
+            name: str = Field(None, description="功能名称", regex=r"^[a-zA-Z0-9_]+$")
+
+        no_future_action: bool = Field(False, description="不进行后续操作")
         function_enable: bool = Field(False, description="功能开关")
+        parent_call: Any = Field(None, description="父消息")
+        callback: Callback = Field(Callback(), description="函数回调信息")
+
+        class Config:
+            arbitrary_types_allowed = True
 
     class Location(BaseModel):
         platform: str = Field(None, description="平台")
@@ -51,7 +61,7 @@ class TaskHeader(BaseModel):
         user_id: Union[int, str] = Field(None, description="用户ID")
         message_id: Union[int, str] = Field(None, description="消息ID")
 
-    task_meta: Meta = Field(None, description="任务元数据")
+    task_meta: Meta = Field(Meta(), description="任务元数据")
     receiver: Location = Field(None, description="接收人")
     message: List[RawMessage] = Field(None, description="消息内容")
 
@@ -79,6 +89,19 @@ class TaskHeader(BaseModel):
                 user_id=user_id,
                 chat_id=chat_id,
                 text=text,
-                created_at=message.date
+                created_at=created_at
             )]
+        )
+
+    @classmethod
+    def from_function(cls, parent_call: Any, task_meta: Meta, receiver: Location):
+        """
+        从 Openai LLM Task中构建任务
+        'function_call': {'name': 'set_alarm_reminder', 'arguments': '{\n  "delay": "5",\n  "content": "该吃饭了"\n}'}}
+        """
+        task_meta.parent_call = parent_call
+        return cls(
+            task_meta=task_meta,
+            receiver=receiver,
+            message=[]
         )

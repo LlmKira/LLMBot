@@ -16,7 +16,7 @@ class Message(BaseModel):
         arguments: str
 
     role: Literal["system", "assistant", "user", "function"] = "user"
-    content: str
+    content: Optional[str] = None
     # speaker
     name: Optional[str] = Field(None, description="speaker_name", regex=r"^[a-zA-Z0-9_]+$")
     # AI generated function call
@@ -26,6 +26,8 @@ class Message(BaseModel):
     def check(cls, values):
         if values.get("role") == "function" and not values.get("name"):
             raise ValidationError("sdk param validator:name must be specified when role is function")
+        if not values.get("content") and not values.get("function_call"):
+            raise ValidationError("sdk param validator:content or function_call must be specified")
         # 过滤value中的None
         return {k: v for k, v in values.items() if v is not None}
 
@@ -40,7 +42,7 @@ class Function(BaseModel):
         type: str = "object"
         properties: dict = {}
 
-    name: str
+    name: str = Field(None, description="函数名称", regex=r"^[a-zA-Z0-9_]+$")
     description: Optional[str] = None
     parameters: Parameters = Parameters(type="object")
     required: list[str] = []

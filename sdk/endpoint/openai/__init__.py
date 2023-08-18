@@ -7,6 +7,7 @@ __version__ = "0.0.1"
 
 from typing import Union, List, Optional, Literal
 
+import httpx
 from dotenv import load_dotenv
 from loguru import logger
 from pydantic import BaseModel, root_validator, validator, Field, HttpUrl, BaseSettings
@@ -123,7 +124,7 @@ class Openai(BaseModel):
         return values
 
     @staticmethod
-    def parse_single_reply(response: dict):
+    def parse_single_reply(response: dict) -> Message:
         """
         解析响应
         :param response:
@@ -132,6 +133,7 @@ class Openai(BaseModel):
         # check
         if not response.get("choices"):
             raise ValidationError("message is empty")
+
         _message = Message.parse_obj(response.get("choices")[0].get("message"))
         return _message
 
@@ -165,17 +167,21 @@ class Openai(BaseModel):
         # TokenizerObj.clear_cache()
         _data = self.dict(exclude_none=True, exclude={"config", "echo"})
         # 返回请求
-        _response = await request(
-            method="POST",
-            url=self.config.endpoint,
-            data=_data,
-            headers={
-                "User-Agent": "Mozilla/5.0",
-                "Authorization": f"Bearer {self.config.api_key}"
-            },
-            proxy=self.config.proxy_address,
-            json_body=True
-        )
+        try:
+            _response = await request(
+                method="POST",
+                url=self.config.endpoint,
+                data=_data,
+                headers={
+                    "User-Agent": "Mozilla/5.0",
+                    "Authorization": f"Bearer {self.config.api_key}"
+                },
+                proxy=self.config.proxy_address,
+                json_body=True
+            )
+        except httpx.ConnectError as e:
+            logger.error(f"openai connect error: {e}")
+            raise e
         if self.echo:
             logger.debug(f"openai response: {_response}")
         return _response

@@ -3,12 +3,21 @@
 # @Author  : sudoskys
 # @File    : action.py
 # @Software: PyCharm
+import hashlib
+import json
 from typing import List
 
 import tiktoken
 from pydantic import BaseModel
 
 from sdk.schema import Message
+
+
+# 生成MD5
+def generate_md5(string):
+    hl = hashlib.md5()
+    hl.update(string.encode(encoding='utf-8'))
+    return str(hl.hexdigest())
 
 
 class Tokenizer(object):
@@ -51,12 +60,15 @@ class Tokenizer(object):
         for message in messages:
             num_tokens += tokens_per_message
             for key, value in message.dict().items():
+                if isinstance(value, dict):
+                    value = json.dumps(value, ensure_ascii=True)
+                _uid = generate_md5(str(value))
                 # 缓存获取 cache，减少重复 encode 次数
-                if value in self.__encode_cache:
-                    _tokens = self.__encode_cache[value]
+                if _uid in self.__encode_cache:
+                    _tokens = self.__encode_cache[_uid]
                 else:
                     _tokens = len(encoding.encode(value))
-                    self.__encode_cache[value] = _tokens
+                    self.__encode_cache[_uid] = _tokens
                 num_tokens += _tokens
                 if key == "name":
                     num_tokens += tokens_per_name
@@ -88,6 +100,8 @@ class Scraper(BaseModel):
 
     # 方法：添加消息
     def add_message(self, message: Message, score: float, order: int):
+        if hasattr(message, "function_call"):
+            return None
         self.messages.append(self.Sorter(message=message, score=score, order=order))
         # 按照顺序排序
         self.messages.sort(key=lambda x: x.order)
@@ -110,6 +124,9 @@ class Scraper(BaseModel):
             # 从最低得分开始删除
             self.messages.sort(key=lambda x: x.score)
             while TokenizerObj.num_tokens_from_messages(self.get_messages()) > limit:
-                self.messages.pop(0)
+                if len(self.messages) > 1:
+                    self.messages.pop(0)
+                else:
+                    self.messages[0].message.content = self.messages[0].message.content[:limit]
         # 按照顺序排序
         self.messages.sort(key=lambda x: x.order)

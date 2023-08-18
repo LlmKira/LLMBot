@@ -37,12 +37,12 @@ class TelegramBotRunner(object):
             _got = await bot.get_chat_member(message.chat.id, message.from_user.id)
             return _got.status in ['administrator', 'creator']
 
-        async def create_task(message: types.Message, funtion_enabled: bool = False):
-            logger.info(f"create task from {message.chat.id} {message.from_user.full_name}")
+        async def create_task(message: types.Message, funtion_enable: bool = False):
+            logger.info(f"create task from {message.chat.id} {message.text} {funtion_enable}")
             return await TelegramTask.send_task(
                 task=TaskHeader.from_telegram(
                     message,
-                    task_meta=TaskHeader.Meta(function_enabled=funtion_enabled)
+                    task_meta=TaskHeader.Meta(function_enable=funtion_enable)
                 )
             )
 
@@ -56,22 +56,21 @@ class TelegramBotRunner(object):
             """
             自动响应私聊消息
             """
-            return await create_task(message, funtion_enabled=False)
-
-        @bot.message_handler(commands='task', chat_types=['private', 'supergroup', 'group'])
-        async def listen_task_command(message: types.Message):
-            """/task - 任务
-            """
-            return await create_task(message, funtion_enabled=True)
+            funtion_enable = False
+            if not message.text:
+                return None
+            if message.text.startswith("/task"):
+                funtion_enable = True
+            return await create_task(message, funtion_enable=funtion_enable)
 
         @bot.message_handler(content_types=['text'], chat_types=['supergroup', 'group'])
         async def handle_group_msg(message: types.Message):
             if not message.text:
                 return None
             if message.text.startswith("/chat"):
-                return await create_task(message, funtion_enabled=False)
+                return await create_task(message, funtion_enable=False)
             if f"@{BotSetting.bot_username} " in message.text or message.text.endswith(f" @{BotSetting.bot_username}"):
-                return await create_task(message, funtion_enabled=False)
+                return await create_task(message, funtion_enable=False)
 
         @bot.message_handler(commands='tool', chat_types=['private', 'supergroup', 'group'])
         async def listen_tool_command(message: types.Message):
