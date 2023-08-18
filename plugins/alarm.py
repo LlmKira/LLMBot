@@ -4,6 +4,7 @@
 # @File    : alarm.py
 # @Software: PyCharm
 import datetime
+import re
 
 from loguru import logger
 from pydantic import validator, BaseModel
@@ -50,6 +51,7 @@ class AlarmTool(BaseTool):
     """
     function: Function = alarm
     keywords: list = ["闹钟", "提醒", "定时", "到点", '分钟']
+    pattern = re.compile(r"(\d+)(分钟|小时|天|周|月|年)后提醒我(.*)")
 
     def func_message(self, message_text):
         """
@@ -58,6 +60,10 @@ class AlarmTool(BaseTool):
         for i in self.keywords:
             if i in message_text:
                 return self.function
+        # 正则匹配
+        match = self.pattern.match(message_text)
+        if match:
+            return self.function
         return None
 
     async def failed(self, platform, receiver, reason):

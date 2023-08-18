@@ -3,6 +3,7 @@
 # @Author  : sudoskys
 # @File    : func_call.py
 # @Software: PyCharm
+import re
 from abc import ABC, abstractmethod
 from typing import Optional, Type, List
 
@@ -18,16 +19,20 @@ class BaseTool(ABC, BaseModel):
     """
     function: Function
     keywords: List[str]
+    pattern: Optional[re.Pattern] = None
 
-    @abstractmethod
     def func_message(self, message_text):
         """
         如果合格则返回message，否则返回None，表示不处理
         """
-        if ...:
+        for i in self.keywords:
+            if i in message_text:
+                return self.function
+        # 正则匹配
+        match = self.pattern.match(message_text)
+        if match:
             return self.function
-        else:
-            return None
+        return None
 
     @abstractmethod
     async def failed(self, platform, receiver, reason):
