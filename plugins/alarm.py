@@ -19,7 +19,7 @@ alarm = Function(name="set_alarm_reminder", description="Set a timed reminder")
 alarm.add_property(
     property_name="delay",
     property_description="The delay time, in minutes",
-    property_type="string",
+    property_type="integer",
     required=True
 )
 alarm.add_property(
@@ -61,9 +61,10 @@ class AlarmTool(BaseTool):
             if i in message_text:
                 return self.function
         # 正则匹配
-        match = self.pattern.match(message_text)
-        if match:
-            return self.function
+        if self.pattern:
+            match = self.pattern.match(message_text)
+            if match:
+                return self.function
         return None
 
     async def failed(self, platform, receiver, reason):

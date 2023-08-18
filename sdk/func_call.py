@@ -29,9 +29,10 @@ class BaseTool(ABC, BaseModel):
             if i in message_text:
                 return self.function
         # 正则匹配
-        match = self.pattern.match(message_text)
-        if match:
-            return self.function
+        if self.pattern:
+            match = self.pattern.match(message_text)
+            if match:
+                return self.function
         return None
 
     @abstractmethod
