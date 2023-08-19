@@ -11,4 +11,5 @@ def help_message():
     /task - 任务
     /tool - 工具列表
     /bind - 绑定发送人
+    /clear - 删除自己的记录
     """

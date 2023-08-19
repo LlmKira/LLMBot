@@ -116,6 +116,7 @@ class Scraper(BaseModel):
         # 去重
         # [*dict.fromkeys(_message)]
         # -> unhashable type: 'Message'
+        print(_message)
         return _message
 
     # 方法：获取消息数

@@ -15,7 +15,7 @@ from .utils import get_client
 class RedisChatMessageHistory(object):
     class RedisSettings(BaseSettings):
         redis_url: str = Field("redis://localhost:6379/0", env="REDIS_URL")
-        redis_key_prefix: str = "llm_message_store:"
+        redis_key_prefix: str = "llm_message_store_0:"
 
         class Config:
             env_file = '.env'

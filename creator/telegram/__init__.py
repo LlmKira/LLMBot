@@ -13,6 +13,7 @@ from telebot.formatting import escape_markdown
 
 from schema import TaskHeader, RawMessage
 from sdk.func_call import TOOL_MANAGER
+from sdk.memory.redis import RedisChatMessageHistory
 from sdk.schema import Function
 from setting.telegram import BotSetting
 from task import Task
@@ -78,6 +79,31 @@ class TelegramBotRunner(object):
             # TODO: 自动订阅系统
             return logger.warning("订阅系统")
 
+        @bot.message_handler(commands='clear', chat_types=['private', 'supergroup', 'group'])
+        async def listen_help_command(message: types.Message):
+            RedisChatMessageHistory(session_id=str(message.from_user.id), ttl=60 * 60 * 1).clear()
+            return await bot.reply_to(
+                message,
+                text=formatting.format_text(
+                    formatting.mbold("🪄 Done"),
+                    separator="\n"
+                ),
+                parse_mode="MarkdownV2"
+            )
+
+        @bot.message_handler(commands='help', chat_types=['private', 'supergroup', 'group'])
+        async def listen_help_command(message: types.Message):
+            from creator.telegram.event import help_message
+            _message = await bot.reply_to(
+                message,
+                text=formatting.format_text(
+                    formatting.mbold("🥕 Help"),
+                    escape_markdown(help_message()),
+                    separator="\n"
+                ),
+                parse_mode="MarkdownV2"
+            )
+
         @bot.message_handler(content_types=['text', 'photo', 'document'], chat_types=['private'])
         async def handle_private_msg(message: types.Message):
             """
@@ -103,7 +129,7 @@ class TelegramBotRunner(object):
                     ),
                     parse_mode="MarkdownV2"
                 )
-            return await create_task(message, funtion_enable=False)
+            return await create_task(message, funtion_enable=__default_function_enable__)
 
         @bot.message_handler(content_types=['text', 'photo', 'document'], chat_types=['supergroup', 'group'])
         async def handle_group_msg(message: types.Message):
@@ -124,19 +150,6 @@ class TelegramBotRunner(object):
                 # 回复了 Bot
                 if message.reply_to_message.from_user.id == BotSetting.bot_id:
                     return await create_task(message, funtion_enable=__default_function_enable__)
-
-        @bot.message_handler(commands='help', chat_types=['private', 'supergroup', 'group'])
-        async def listen_help_command(message: types.Message):
-            from creator.telegram.event import help_message
-            _message = await bot.reply_to(
-                message,
-                text=formatting.format_text(
-                    formatting.mbold("🥕 Help"),
-                    escape_markdown(help_message()),
-                    separator="\n"
-                ),
-                parse_mode="MarkdownV2"
-            )
 
         from telebot import asyncio_filters
         bot.add_custom_filter(asyncio_filters.IsAdminFilter(bot))
