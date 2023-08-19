@@ -41,8 +41,9 @@ docker ps -l
 - ▶️ 运行
 
 ```bash
-python3 creator/app.py
-python3 receiver/app.py
+python3 start_creator.py
+python3 start_receiver.py
+
 ```
 
 ## 基础命令
@@ -59,6 +60,10 @@ python3 receiver/app.py
 - [x] 定时系统
 - [ ] 订阅系统
 - [x] 插件的文件支持
+- [ ] 插件的Openai支持
+- [ ] 消费系统完善
+- [ ] 图表示例插件
+- [ ] 插件管理器
 
 ## 💻 如何开发？
 
