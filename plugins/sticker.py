@@ -128,9 +128,9 @@ class StickerTool(BaseTool):
                     for i in item.file:
                         _file.append(i)
             _set = Sticker.parse_obj(arg)
-            _file_obj = [await RawMessage.download_file(file_id=i.file_id) for i in _file]
+            _file_obj = [await RawMessage.download_file(file_id=i.file_id) for i in sorted(set(_file), key=_file.index)]
             # 去掉None
-            _file_obj = [BytesIO(i) for i in _file_obj if i]
+            _file_obj = [BytesIO(item) for item in _file_obj if item]
             _result = []
             if not _file_obj:
                 return

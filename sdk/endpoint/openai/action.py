@@ -112,7 +112,11 @@ class Scraper(BaseModel):
     def get_messages(self) -> list[Message]:
         # 按照顺序排序
         self.messages.sort(key=lambda x: x.order)
-        return [message.message for message in self.messages]
+        _message = [message.message for message in self.messages]
+        # 去重
+        # [*dict.fromkeys(_message)]
+        # -> unhashable type: 'Message'
+        return _message
 
     # 方法：获取消息数
     def get_num_messages(self) -> int:

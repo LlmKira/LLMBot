@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from typing import Optional
 
 import redis
 from loguru import logger
@@ -17,7 +16,6 @@ class RedisChatMessageHistory(object):
     class RedisSettings(BaseSettings):
         redis_url: str = Field("redis://localhost:6379/0", env="REDIS_URL")
         redis_key_prefix: str = "llm_message_store:"
-        redis_ttl: Optional[int] = None
 
         class Config:
             env_file = '.env'
@@ -38,6 +36,7 @@ class RedisChatMessageHistory(object):
     def __init__(
             self,
             session_id: str,
+            ttl: int,
             redis_config: RedisSettings = RedisSettings(),
     ):
         try:
@@ -55,7 +54,7 @@ class RedisChatMessageHistory(object):
 
         self.session_id = session_id
         self.key_prefix = redis_config.redis_key_prefix
-        self.ttl = redis_config.redis_ttl
+        self.ttl = ttl
 
     @property
     def key(self) -> str:

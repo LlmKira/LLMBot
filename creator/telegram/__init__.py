@@ -20,6 +20,7 @@ from task import Task
 StepCache = StateMemoryStorage()
 __sender__ = "telegram"
 TelegramTask = Task(queue=__sender__)
+__default_function_enable__ = True
 
 
 class TelegramBotRunner(object):
@@ -67,7 +68,8 @@ class TelegramBotRunner(object):
                 task=TaskHeader.from_telegram(
                     message,
                     file=_file,
-                    task_meta=TaskHeader.Meta(function_enable=funtion_enable)
+                    task_meta=TaskHeader.Meta(function_enable=funtion_enable),
+                    trace_back_message=[message.reply_to_message]
                 )
             )
 
@@ -108,16 +110,20 @@ class TelegramBotRunner(object):
             """
             自动响应群组消息
             """
-
             message.text = message.text if message.text else message.caption
             if not message.text:
                 return None
             if is_command(text=message.text, command="/chat"):
-                return await create_task(message, funtion_enable=False)
+                return await create_task(message, funtion_enable=__default_function_enable__)
             if is_command(text=message.text, command="/task"):
                 return await create_task(message, funtion_enable=True)
             if f"@{BotSetting.bot_username} " in message.text or message.text.endswith(f" @{BotSetting.bot_username}"):
-                return await create_task(message, funtion_enable=False)
+                return await create_task(message, funtion_enable=__default_function_enable__)
+            # 检查回复
+            if message.reply_to_message:
+                # 回复了 Bot
+                if message.reply_to_message.from_user.id == BotSetting.bot_id:
+                    return await create_task(message, funtion_enable=__default_function_enable__)
 
         @bot.message_handler(commands='help', chat_types=['private', 'supergroup', 'group'])
         async def listen_help_command(message: types.Message):

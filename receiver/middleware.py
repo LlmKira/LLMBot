@@ -26,7 +26,7 @@ class OpenaiMiddleware(object):
         self.scraper = Scraper()  # 刮削器
         self.functions = []
         self.task = task
-        self.message_history = RedisChatMessageHistory(session_id=str(task.receiver.user_id))
+        self.message_history = RedisChatMessageHistory(session_id=str(task.receiver.user_id), ttl=60 * 60 * 1)
 
     def create(self):
         # 先拉取记录再转换

@@ -5,7 +5,7 @@
 # @Software: PyCharm
 import hashlib
 from io import BytesIO
-from typing import Union, List, Any, Literal
+from typing import Union, List, Any, Literal, Optional
 
 from pydantic import Field, BaseModel
 from telebot import types
@@ -39,6 +39,19 @@ class File(BaseModel):
     file_id: str = Field(None, description="文件ID")
     file_name: str = Field(None, description="文件名")
     file_url: str = Field(None, description="文件URL")
+
+    def __eq__(self, other):
+        if isinstance(other, File):
+            return (self.file_id == other.file_id) and (self.file_name == other.file_name) and (
+                        self.file_url == other.file_url)
+        else:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(self.file_id) + hash(self.file_name) + hash(self.file_url)
 
 
 class RawMessage(BaseModel):
@@ -111,43 +124,61 @@ class TaskHeader(BaseModel):
     @classmethod
     def from_telegram(cls, message: Union[types.Message],
                       task_meta: Meta,
-                      file: List[File] = None,
+                      file=None,
                       reply: bool = True,
-                      hide_file_info: bool = False
+                      hide_file_info: bool = False,
+                      trace_back_message: List[types.Message] = None
                       ):
         """
         从telegram消息中构建任务
         """
-        _file_name = []
+
+        if trace_back_message is None:
+            trace_back_message = []
         if file is None:
             file = []
-        else:
+
+        def _convert(_message: types.Message) -> Optional[RawMessage]:
+            if not _message or not _message.text:
+                return None
+            if isinstance(_message, types.Message):
+                user_id = _message.from_user.id
+                chat_id = _message.chat.id
+                text = _message.text if _message.text else _message.caption
+                created_at = _message.date
+            else:
+                raise ValueError(f"Unknown message type {type(_message)}")
+            return RawMessage(
+                user_id=user_id,
+                chat_id=chat_id,
+                text=text,
+                created_at=created_at
+            )
+
+        _file_name = []
+        if file:
             for _file in file:
                 _file_name.append(f"![{_file.file_name}]")
-        if isinstance(message, types.Message):
-            user_id = message.from_user.id
-            chat_id = message.chat.id
-            text = message.text if message.text else message.caption
-            created_at = message.date
-        else:
-            raise ValueError(f"Unknown message type {type(message)}")
+        head_message = _convert(message)
+        head_message.file = file,
         if not hide_file_info:
-            text += "\n" + "\n".join(_file_name)
+            head_message.text += "\n" + "\n".join(_file_name)
+        message_list = []
+        if trace_back_message:
+            for item in trace_back_message:
+                message_list.append(_convert(item))
+        message_list.append(head_message)
+        message_list = [item for item in message_list if item]
+        # 去掉 None
         return cls(
             task_meta=task_meta,
             receiver=cls.Location(
                 platform="telegram",
-                chat_id=chat_id,
-                user_id=chat_id,
+                chat_id=message.chat.id,
+                user_id=message.from_user.id,
                 message_id=message.message_id if reply else None
             ),
-            message=[RawMessage(
-                user_id=user_id,
-                chat_id=chat_id,
-                text=text,
-                file=file,
-                created_at=created_at
-            )]
+            message=message_list
         )
 
     @classmethod
