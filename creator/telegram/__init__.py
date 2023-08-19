@@ -112,8 +112,10 @@ class TelegramBotRunner(object):
             message.text = message.text if message.text else message.caption
             if not message.text:
                 return None
-            if message.text.startswith("/chat"):
+            if is_command(text=message.text, command="/chat"):
                 return await create_task(message, funtion_enable=False)
+            if is_command(text=message.text, command="/task"):
+                return await create_task(message, funtion_enable=True)
             if f"@{BotSetting.bot_username} " in message.text or message.text.endswith(f" @{BotSetting.bot_username}"):
                 return await create_task(message, funtion_enable=False)
 
