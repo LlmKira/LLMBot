@@ -5,8 +5,13 @@
 # @Software: PyCharm
 import tzlocal
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 
-SCHEDULER = AsyncIOScheduler(timezone=str(tzlocal.get_localzone()))
+job_defaults = {
+    'coalesce': True,
+    'misfire_grace_time': None
+}
+SCHEDULER = BackgroundScheduler(job_defaults=job_defaults, timezone=str(tzlocal.get_localzone()))
 
 
 async def aps_start():

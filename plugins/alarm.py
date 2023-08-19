@@ -129,7 +129,10 @@ class AlarmTool(BaseTool):
                 run_date=datetime.datetime.now() + datetime.timedelta(minutes=_set.delay),
                 args=[receiver, _set]
             )
-            SCHEDULER.start()
+            try:
+                SCHEDULER.start()
+            except Exception as e:
+                pass
         except Exception as e:
             logger.exception(e)
             await self.failed(platform=receiver.platform, receiver=receiver, reason=str(e))
