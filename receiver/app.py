@@ -8,9 +8,9 @@ import asyncio
 from loguru import logger
 
 import plugins
-from function import FunctionReceiver
-from aps import aps_start
-from telegram import TelegramReceiver
+from .function import FunctionReceiver
+from .aps import aps_start
+from .telegram import TelegramReceiver
 
 func = [
     aps_start(),

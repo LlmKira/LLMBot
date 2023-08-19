@@ -10,7 +10,7 @@ from loguru import logger
 from telebot import util
 
 import plugins
-from telegram import TelegramBotRunner
+from .telegram import TelegramBotRunner
 
 logger.remove()
 handler_id = logger.add(sys.stderr, level="INFO")
