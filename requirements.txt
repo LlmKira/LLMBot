@@ -10,7 +10,7 @@ elara
 redis>=4.5.4
 shortuuid
 tiktoken
-pika
+aio_pika
 apscheduler
 pillow
 nest-asyncio

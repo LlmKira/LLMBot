@@ -40,19 +40,6 @@ class File(BaseModel):
     file_name: str = Field(None, description="文件名")
     file_url: str = Field(None, description="文件URL")
 
-    def __eq__(self, other):
-        if isinstance(other, File):
-            return (self.file_id == other.file_id) and (self.file_name == other.file_name) and (
-                        self.file_url == other.file_url)
-        else:
-            return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __hash__(self):
-        return hash(self.file_id) + hash(self.file_name) + hash(self.file_url)
-
 
 class RawMessage(BaseModel):
     user_id: int = Field(None, description="用户ID")
@@ -118,13 +105,14 @@ class TaskHeader(BaseModel):
         message_id: Union[int, str] = Field(None, description="消息ID")
 
     task_meta: Meta = Field(Meta(), description="任务元数据")
+    sender: Location = Field(None, description="发信人")
     receiver: Location = Field(None, description="接收人")
     message: List[RawMessage] = Field(None, description="消息内容")
 
     @classmethod
     def from_telegram(cls, message: Union[types.Message],
                       task_meta: Meta,
-                      file=None,
+                      file: List[File] = None,
                       reply: bool = True,
                       hide_file_info: bool = False,
                       trace_back_message: List[types.Message] = None
@@ -160,7 +148,7 @@ class TaskHeader(BaseModel):
             for _file in file:
                 _file_name.append(f"![{_file.file_name}]")
         head_message = _convert(message)
-        head_message.file = file,
+        head_message.file = file
         if not hide_file_info:
             head_message.text += "\n" + "\n".join(_file_name)
         message_list = []
@@ -172,6 +160,12 @@ class TaskHeader(BaseModel):
         # 去掉 None
         return cls(
             task_meta=task_meta,
+            sender=cls.Location(
+                platform="telegram",
+                chat_id=message.chat.id,
+                user_id=message.from_user.id,
+                message_id=message.message_id if reply else None
+            ),
             receiver=cls.Location(
                 platform="telegram",
                 chat_id=message.chat.id,

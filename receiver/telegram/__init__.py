@@ -100,10 +100,10 @@ class TelegramReceiver(object):
         self.task = Task(queue=__receiver__)
 
     async def on_message(self, message: AbstractIncomingMessage):
+        await message.ack()
         # 解析数据
         _task: TaskHeader = TaskHeader.parse_raw(message.body)
         _llm = OpenaiMiddleware(task=_task)
-        await message.ack()
         print(" [x] Received Order %r" % _task)
         if _task.task_meta.no_future_action:
             __sender__.forward(
