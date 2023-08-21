@@ -94,10 +94,11 @@ class StickerTool(BaseTool):
                 return self.function
         return None
 
-    async def failed(self, platform, receiver, reason):
+    async def failed(self, platform, task, receiver, reason):
         try:
             await Task(queue=platform).send_task(
                 task=TaskHeader(
+                    sender=task.sender,
                     receiver=receiver,
                     task_meta=TaskHeader.Meta(no_future_action=True,
                                               callback=TaskHeader.Meta.Callback(
@@ -145,6 +146,7 @@ class StickerTool(BaseTool):
 
             await Task(queue=receiver.platform).send_task(
                 task=TaskHeader(
+                    sender=task.sender,
                     receiver=receiver,
                     task_meta=TaskHeader.Meta(no_future_action=True,
                                               callback=TaskHeader.Meta.Callback(

@@ -4,14 +4,24 @@
 # @File    : app.py
 # @Software: PyCharm
 import asyncio
+import sys
 
 from loguru import logger
 
 import plugins
-from .function import FunctionReceiver
 from .aps import aps_start
+from .function import FunctionReceiver
 from .telegram import TelegramReceiver
 
+logger.remove()
+handler_id = logger.add(sys.stderr, level="INFO")
+logger.add(sink='run.log',
+           format="{time} - {level} - {message}",
+           level="INFO",
+           rotation="100 MB",
+           enqueue=True
+           )
+__area__ = "receiver"
 func = [
     aps_start(),
     FunctionReceiver().function(),

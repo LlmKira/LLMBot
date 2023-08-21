@@ -94,15 +94,21 @@ class TaskHeader(BaseModel):
         function_enable: bool = Field(False, description="功能开关")
         parent_call: Any = Field(None, description="父消息")
         callback: Callback = Field(Callback(), description="函数回调信息")
+        extra_args: dict = Field({}, description="额外参数")
 
         class Config:
             arbitrary_types_allowed = True
 
     class Location(BaseModel):
         platform: str = Field(None, description="平台")
-        chat_id: Union[int, str] = Field(None, description="群组ID")
-        user_id: Union[int, str] = Field(None, description="用户ID")
-        message_id: Union[int, str] = Field(None, description="消息ID")
+        chat_id: int = Field(None, description="群组ID")
+        user_id: int = Field(None, description="用户ID")
+        message_id: int = Field(None, description="消息ID")
+
+    class Plugin(BaseModel):
+        name: str = Field(None, description="插件名称")
+        is_run_out: bool = Field(False, description="是否运行完毕")
+        token_usage: int = Field(0, description="Token 用量")
 
     task_meta: Meta = Field(Meta(), description="任务元数据")
     sender: Location = Field(None, description="发信人")
@@ -184,6 +190,18 @@ class TaskHeader(BaseModel):
         task_meta.parent_call = parent_call
         return cls(
             task_meta=task_meta,
+            sender=receiver,
             receiver=receiver,
             message=message
         )
+
+
+def singleton(cls):
+    _instance = {}
+
+    def inner():
+        if cls not in _instance:
+            _instance[cls] = cls()
+        return _instance[cls]
+
+    return inner

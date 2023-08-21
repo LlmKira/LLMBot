@@ -11,10 +11,12 @@ from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
 from telebot.formatting import escape_markdown
 
+from middleware.router import RouterManager, Router
 from schema import TaskHeader, RawMessage
 from sdk.func_call import TOOL_MANAGER
 from sdk.memory.redis import RedisChatMessageHistory
 from sdk.schema import Function
+from sender.telegram.utils import parse_command
 from setting.telegram import BotSetting
 from task import Task
 
@@ -45,7 +47,7 @@ class TelegramBotRunner(object):
 
         async def is_admin(message: types.Message):
             _got = await bot.get_chat_member(message.chat.id, message.from_user.id)
-            return _got.status in ['administrator', 'creator']
+            return _got.status in ['administrator', 'sender']
 
         async def telegram_to_file(file):
             name = file.file_id
@@ -76,8 +78,32 @@ class TelegramBotRunner(object):
 
         @bot.message_handler(commands='bind', chat_types=['private'])
         async def listen_bind_command(message: types.Message):
-            # TODO: 自动订阅系统
-            return logger.warning("订阅系统")
+            _cmd, _arg = parse_command(command=message.text)
+            if not _arg:
+                return
+            try:
+                _manager = RouterManager()
+                router = Router.build_from_receiver(receiver=__sender__, user_id=message.from_user.id, dsn=_arg)
+                _manager.add_router(router=router)
+                router_list = _manager.get_router_by_user(user_id=message.from_user.id, to_=__sender__)
+            except Exception as e:
+                return await bot.reply_to(
+                    message,
+                    text=formatting.format_text(
+                        formatting.mbold(str(e)),
+                        separator="\n"
+                    ),
+                    parse_mode="MarkdownV2"
+                )
+            return await bot.reply_to(
+                message,
+                text=formatting.format_text(
+                    formatting.mbold("🪄 Done"),
+                    *[f"`{escape_markdown(item.dsn(user_dsn=True))}`" for item in router_list],
+                    separator="\n"
+                ),
+                parse_mode="MarkdownV2"
+            )
 
         @bot.message_handler(commands='clear', chat_types=['private', 'supergroup', 'group'])
         async def listen_help_command(message: types.Message):
@@ -93,7 +119,7 @@ class TelegramBotRunner(object):
 
         @bot.message_handler(commands='help', chat_types=['private', 'supergroup', 'group'])
         async def listen_help_command(message: types.Message):
-            from creator.telegram.event import help_message
+            from sender.telegram.event import help_message
             _message = await bot.reply_to(
                 message,
                 text=formatting.format_text(

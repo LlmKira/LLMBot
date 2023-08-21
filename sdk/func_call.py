@@ -17,6 +17,7 @@ class BaseTool(ABC, BaseModel):
     """
     基础工具类，所有工具类都应该继承此类
     """
+    silent: bool = False
     function: Function
     keywords: List[str]
     pattern: Optional[re.Pattern] = None
@@ -45,7 +46,7 @@ class BaseTool(ABC, BaseModel):
         return None
 
     @abstractmethod
-    async def failed(self, platform, receiver, reason):
+    async def failed(self, platform, task, receiver, reason):
         """
         处理失败
         """
@@ -96,13 +97,18 @@ class ToolManager:
     def get_all_function(self) -> dict:
         return self.__function
 
-    def run_all_check(self, message_text) -> List[Function]:
+    def run_all_check(self, message_text, ignore: List[str] = None) -> List[Function]:
         """
         运行所有工具的检查，返回所有检查通过的 函数
         """
+        if ignore is None:
+            ignore = []
         _pass = []
         for name, tool in self.get_all_tool().items():
             if tool().func_message(message_text=message_text):
+                if name in ignore:
+                    continue
+                    # 跳过
                 _pass.append(self.get_function(name))
         return _pass
 

@@ -20,7 +20,7 @@ logger.add(sink='run.log',
            rotation="100 MB",
            enqueue=True
            )
-
+__area__ = "sender"
 # 注册机器人事件
 telegram_bot = TelegramBotRunner().telegram()
 
