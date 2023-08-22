@@ -43,6 +43,10 @@ alarm.add_property(
 
 ## 📝 部署指南
 
+- (可选)
+
+`pip uninstall llm-kira`
+
 - 🛠 配置 `.env` 文件
 
 ```bash
