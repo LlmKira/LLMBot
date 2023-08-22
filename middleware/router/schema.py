@@ -36,7 +36,7 @@ class Router(BaseModel):
         try:
             from_, rules, _method = dsn.split("@", maxsplit=3)
         except Exception as e:
-            raise ValueError(f"dsn error {dsn},{e}. exp: rss@http://rss.toml@push")
+            raise ValueError(f"dsn error {dsn},{e}. exp: rss@http://rss.toml@push  available: {SENDER}")
         if from_ not in SENDER:
             raise ValueError(f"sender must in {SENDER}, not {from_}")
         if _method not in ALLOW_METHOD:

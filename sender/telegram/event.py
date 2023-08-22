@@ -10,6 +10,7 @@ def help_message():
     /chat - 聊天
     /task - 任务
     /tool - 工具列表
-    /bind - 绑定发送人
+    /bind - 绑定可选平台
+    /unbind - 解绑可选平台
     /clear - 删除自己的记录
     """
