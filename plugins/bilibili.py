@@ -65,7 +65,7 @@ class AlarmTool(BaseTool):
     """
     silent: bool = True
     function: Function = bilibili
-    keywords: list = ["哔哩哔哩", "b站", "B站", "视频", '搜索', 'bilibili']
+    keywords: list = ["哔哩哔哩", "b站", "B站", "视频", '搜索', '新闻', 'bilibili']
 
     def pre_check(self):
         try:
@@ -144,7 +144,7 @@ class AlarmTool(BaseTool):
             _question = task.message[0].text
             _summary = await self.llm_task(
                 task,
-                task_desc=f"""按照上文搜索结果，请仔细思考阅读并回答我的问题： *{_question}* ，筛选推荐视频，附上链接""",
+                task_desc=f"""按照上文搜索结果，总结比较信息，以模仿人类以中文短讯回答我的问题： *{_question}* ，附上链接""",
                 raw_data=_search_result
             )
             await Task(queue=receiver.platform).send_task(
