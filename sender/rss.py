@@ -8,9 +8,11 @@ import json
 import socket
 
 import feedparser
-import html2text
+from inscriptis import get_text
+from loguru import logger
 from pydantic import BaseModel
 from telebot import formatting
+from telebot.formatting import escape_markdown
 
 from cache.redis import cache
 from middleware.router import RouterManager
@@ -46,7 +48,8 @@ class RssApp(object):
         """
         message = formatting.format_text(
             formatting.mbold(entry["title"]),
-            formatting.escape_markdown(entry["summary"]),
+            "\n",
+            escape_markdown(entry["summary"]),
             formatting.mlink(entry["author"], entry["url"]),
             separator="\n",
         )
@@ -68,6 +71,7 @@ class RssApp(object):
                         )
                     )
             except Exception as e:
+                logger.exception(e)
                 _title, _entry = f"Error When receive sub{router.rules}", []
                 await Task(queue=router.to_).send_task(
                     task=TaskHeader.from_router(
@@ -82,8 +86,8 @@ class RssApp(object):
 
     async def rss_polling(self, interval=60 * 60 * 1):
         while True:
-            await asyncio.sleep(interval)
             await self.task()
+            await asyncio.sleep(interval)
 
 
 class Rss(object):
@@ -117,13 +121,13 @@ class Rss(object):
                 "url": entry["link"],
                 "id": entry["id"],
                 "author": entry["author"],
-                "summary": html2text.html2text(entry["summary"]),
+                "summary": get_text(entry["summary"]),
             }
         return self.Update(title=_title, entry=_entry)
 
     async def re_init(self, update: Update) -> (str, list):
-        _entry = list[update.entry.values()][:1]
-        await cache.set_data(key=self.db_key, value=update.json(), timeout=60 * 60 * 60 * 7)
+        _entry = list(update.entry.values())[:1]
+        # await cache.set_data(key=self.db_key, value=update.json(), timeout=60 * 60 * 60 * 7)
         return update.title, _entry
 
     async def update(self, cache_, update_, keys):

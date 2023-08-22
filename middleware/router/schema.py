@@ -21,6 +21,7 @@ def router_set(role: Literal["sender", "receiver"], name: str):
 
 
 ROUTER_METHOD = Literal["push", "chat", "task"]
+ALLOW_METHOD = ["push", "chat", "task"]
 
 
 class Router(BaseModel):
@@ -38,8 +39,8 @@ class Router(BaseModel):
             raise ValueError(f"dsn error {dsn},{e}. exp: rss@http://rss.toml@push")
         if from_ not in SENDER:
             raise ValueError(f"sender must in {SENDER}, not {from_}")
-        if _method not in list(ROUTER_METHOD):
-            raise ValueError(f"method must in {ROUTER_METHOD}, not {_method}")
+        if _method not in ALLOW_METHOD:
+            raise ValueError(f"method must in {ALLOW_METHOD}, not {_method}")
         return cls(from_=from_, to_=receiver, user_id=user_id, rules=rules)
 
     def dsn(self, user_dsn=False):

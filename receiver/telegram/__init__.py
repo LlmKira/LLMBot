@@ -60,7 +60,8 @@ class TelegramSender(object):
             self.bot.send_message(
                 chat_id=chat_id,
                 text=item.text,
-                reply_to_message_id=reply_to_message_id
+                reply_to_message_id=reply_to_message_id,
+                parse_mode="MarkdownV2"
             )
 
     def reply(self, chat_id, reply_to_message_id, message: List[Message]):

@@ -18,7 +18,9 @@ class RouterManager(object):
         self.router = sync(self._sync())
 
     async def _upload(self):
-        return await cache.set_data(key=self.__redis_key__, value=self.router)
+        assert isinstance(self.router, RouterCache), "router info error"
+        self.router = RouterCache.parse_obj(self.router.dict())
+        return await cache.set_data(key=self.__redis_key__, value=self.router.json())
 
     async def _sync(self) -> RouterCache:
         _cache = await cache.read_data(key=self.__redis_key__)
@@ -40,4 +42,9 @@ class RouterManager(object):
 
     def add_router(self, router: Router):
         self.router.router.append(router)
+        return sync(self._upload())
+
+    def remove_router(self, router: Router):
+        if router in self.router.router:
+            self.router.router.remove(router)
         return sync(self._upload())

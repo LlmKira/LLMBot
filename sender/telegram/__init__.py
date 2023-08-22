@@ -81,12 +81,43 @@ class TelegramBotRunner(object):
             _cmd, _arg = parse_command(command=message.text)
             if not _arg:
                 return
+            _manager = RouterManager()
             try:
-                _manager = RouterManager()
                 router = Router.build_from_receiver(receiver=__sender__, user_id=message.from_user.id, dsn=_arg)
                 _manager.add_router(router=router)
                 router_list = _manager.get_router_by_user(user_id=message.from_user.id, to_=__sender__)
             except Exception as e:
+                logger.exception(e)
+                return await bot.reply_to(
+                    message,
+                    text=formatting.format_text(
+                        formatting.mbold(str(e)),
+                        separator="\n"
+                    ),
+                    parse_mode="MarkdownV2"
+                )
+            return await bot.reply_to(
+                message,
+                text=formatting.format_text(
+                    formatting.mbold("🪄 Done"),
+                    *[f"`{escape_markdown(item.dsn(user_dsn=True))}`" for item in router_list],
+                    separator="\n"
+                ),
+                parse_mode="MarkdownV2"
+            )
+
+        @bot.message_handler(commands='unbind', chat_types=['private'])
+        async def listen_unbind_command(message: types.Message):
+            _cmd, _arg = parse_command(command=message.text)
+            if not _arg:
+                return None
+            _manager = RouterManager()
+            try:
+                router = Router.build_from_receiver(receiver=__sender__, user_id=message.from_user.id, dsn=_arg)
+                _manager.remove_router(router=router)
+                router_list = _manager.get_router_by_user(user_id=message.from_user.id, to_=__sender__)
+            except Exception as e:
+                logger.exception(e)
                 return await bot.reply_to(
                     message,
                     text=formatting.format_text(

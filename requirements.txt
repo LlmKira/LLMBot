@@ -15,6 +15,7 @@ python-dotenv
 elara
 redis>=4.5.4
 aio_pika
+
 #
 shortuuid
 tiktoken
@@ -25,4 +26,4 @@ tzlocal
 # plugin
 feedparser==6.0.10
 pillow
-html2text
+inscriptis

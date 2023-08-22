@@ -33,7 +33,7 @@ sticker.add_property(
 
 class Sticker(BaseModel):
     yes_no: str
-    comment: str = "OK I will do it"
+    comment: str = "done"
 
     class Config:
         extra = "allow"
@@ -168,4 +168,4 @@ class StickerTool(BaseTool):
             logger.debug("convert_to_sticker say: {}".format(_set.yes_no))
         except Exception as e:
             logger.exception(e)
-            await self.failed(platform=receiver.platform, receiver=receiver, reason=str(e))
+            await self.failed(platform=receiver.platform, task=task, receiver=receiver, reason=str(e))

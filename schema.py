@@ -41,6 +41,19 @@ class File(BaseModel):
     file_name: str = Field(None, description="文件名")
     file_url: str = Field(None, description="文件URL")
 
+    # hash able
+    def __eq__(self, other):
+        if isinstance(other, File):
+            return (self.file_id == other.file_id) and (self.file_name == other.file_name)
+        else:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(self.file_id) + hash(self.file_name)
+
 
 class RawMessage(BaseModel):
     user_id: int = Field(None, description="用户ID")
@@ -222,12 +235,12 @@ class TaskHeader(BaseModel):
                 user_id=user_id,
                 message_id=None
             ),
-            message=RawMessage(
+            message=[RawMessage(
                 user_id=user_id,
                 chat_id=user_id,
                 text=message_text,
                 created_at=int(time.time())
-            )
+            )]
         )
 
 
