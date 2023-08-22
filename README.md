@@ -43,7 +43,7 @@ alarm.add_property(
 
 ## 📝 部署指南
 
-- (可选)
+- (可选) 解决冲突
 
 `pip uninstall llm-kira`
 
