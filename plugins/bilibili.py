@@ -46,7 +46,7 @@ async def search_on_bilibili(keywords):
         _video_url = video.get("arcurl")
         _video_tag = video.get("tag")
         _video_play = video.get("play")
-        _video_info = f"标题：{_video_title}\n作者：{_video_author}\n链接：{_video_url}\n标签：{_video_tag}\n播放量：{_video_play}"
+        _video_info = f"(Title={_video_title},Author={_video_author},Link={_video_url},Tag={_video_tag},Love={_video_play})"
         _info.append(_video_info)
     return "\n\n".join(_info)
 
@@ -144,7 +144,7 @@ class AlarmTool(BaseTool):
             _question = task.message[0].text
             _summary = await self.llm_task(
                 task,
-                task_desc=f"""按照上文搜索结果，请仔细思考阅读并回答我： *{_question}* ，附上视频链接""",
+                task_desc=f"""按照上文搜索结果，请仔细思考阅读并回答我的问题： *{_question}* ，筛选推荐视频，附上链接""",
                 raw_data=_search_result
             )
             await Task(queue=receiver.platform).send_task(
