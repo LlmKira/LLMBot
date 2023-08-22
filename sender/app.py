@@ -30,7 +30,7 @@ func = [
     telegram_bot.polling(
         non_stop=True,
         allowed_updates=util.update_types,
-        skip_pending=False,
+        skip_pending=True,
         timeout=60,
         request_timeout=60
     ),
