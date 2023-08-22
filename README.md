@@ -17,6 +17,31 @@ LLMBot 是基于消息队列的机器人助手，可以装载插件完成许多�
 - 📬 简洁交互设计，避免繁琐的权限验证
 - 📬 细化的消费记录
 
+### 插件系统预览
+
+| Sticker Converter                   | Timer Func                      |
+|-------------------------------------|---------------------------------|
+| ![sticker](./docs/sticker_func.gif) | ![timer](./docs/timer_func.gif) |
+
+```python3
+__plugin_name__ = "set_alarm_reminder"
+
+alarm = Function(name=__plugin_name__, description="Set a timed reminder")
+alarm.add_property(
+    property_name="delay",
+    property_description="The delay time, in minutes",
+    property_type="integer",
+    required=True
+)
+alarm.add_property(
+    property_name="content",
+    property_description="reminder content",
+    property_type="string",
+    required=True
+)
+```
+
+
 ## 📝 部署指南
 
 - 🛠 配置 `.env` 文件

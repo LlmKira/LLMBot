@@ -62,7 +62,7 @@ class Tokenizer(object):
             num_tokens += tokens_per_message
             for key, value in message.dict().items():
                 if isinstance(value, dict):
-                    value = json.dumps(value, ensure_ascii=True)
+                    value = json.dumps(value, ensure_ascii=False)
                 _uid = generate_md5(str(value))
                 # 缓存获取 cache，减少重复 encode 次数
                 if _uid in self.__encode_cache:
@@ -97,7 +97,7 @@ class Scraper(BaseModel):
     # 消息列表
     messages: list[Sorter] = []
     # 最大消息数
-    max_messages: int = 100
+    max_messages: int = 12
 
     # 方法：添加消息
     def add_message(self, message: Message, score: float, order: int):
@@ -126,6 +126,8 @@ class Scraper(BaseModel):
 
     # 方法：清除消息到负载
     def reduce_messages(self, limit: int = 2048):
+        if limit > 100:
+            limit = limit - 70
         if TokenizerObj.num_tokens_from_messages(self.get_messages()) > limit:
             # 从最低得分开始删除
             self.messages.sort(key=lambda x: x.score)
