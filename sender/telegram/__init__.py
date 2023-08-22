@@ -12,11 +12,12 @@ from telebot.asyncio_storage import StateMemoryStorage
 from telebot.formatting import escape_markdown
 
 from middleware.router import RouterManager, Router
+from middleware.user import SubManager
 from schema import TaskHeader, RawMessage
 from sdk.func_call import TOOL_MANAGER
 from sdk.memory.redis import RedisChatMessageHistory
 from sdk.schema import Function
-from sender.telegram.utils import parse_command
+from sender.telegram.utils import parse_command, is_valid_url
 from setting.telegram import BotSetting
 from task import Task
 
@@ -74,6 +75,58 @@ class TelegramBotRunner(object):
                     task_meta=TaskHeader.Meta(function_enable=funtion_enable),
                     trace_back_message=[message.reply_to_message]
                 )
+            )
+
+        @bot.message_handler(commands='clear_rset', chat_types=['private'])
+        async def listen_clear_rset_command(message: types.Message):
+            # _cmd, _arg = parse_command(command=message.text)
+            _tips = "🪄 Done"
+            await SubManager(user_id=message.from_user.id).clear_endpoint()
+            return await bot.reply_to(
+                message,
+                text=formatting.format_text(
+                    formatting.mbold(_tips),
+                    separator="\n"
+                ),
+                parse_mode="MarkdownV2"
+            )
+
+        @bot.message_handler(commands='rset_key', chat_types=['private'])
+        async def listen_rset_key_command(message: types.Message):
+            _cmd, _arg = parse_command(command=message.text)
+            if not _arg:
+                return
+            if len(_arg) > 10:
+                _tips = "🪄 Done"
+                await SubManager(user_id=message.from_user.id).set_endpoint(endpoint=_arg)
+            else:
+                _tips = f"🪄 {_arg} is too short"
+            return await bot.reply_to(
+                message,
+                text=formatting.format_text(
+                    formatting.mbold(_tips),
+                    separator="\n"
+                ),
+                parse_mode="MarkdownV2"
+            )
+
+        @bot.message_handler(commands='rset_endpoint', chat_types=['private'])
+        async def listen_rset_endpoint_command(message: types.Message):
+            _cmd, _arg = parse_command(command=message.text)
+            if not _arg:
+                return
+            if is_valid_url(_arg):
+                _tips = "🪄 Done"
+                await SubManager(user_id=message.from_user.id).set_endpoint(endpoint=_arg)
+            else:
+                _tips = f"🪄 {_arg} is not a valid url"
+            return await bot.reply_to(
+                message,
+                text=formatting.format_text(
+                    formatting.mbold(_tips),
+                    separator="\n"
+                ),
+                parse_mode="MarkdownV2"
             )
 
         @bot.message_handler(commands='bind', chat_types=['private'])

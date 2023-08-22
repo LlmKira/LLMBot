@@ -3,6 +3,9 @@
 # @Author  : sudoskys
 # @File    : utils.py
 # @Software: PyCharm
+from urllib.parse import urlparse
+
+
 def parse_command(command):
     if not command:
         return None, None
@@ -13,3 +16,11 @@ def parse_command(command):
         return parts[0], None
     else:
         return None, None
+
+
+def is_valid_url(url):
+    try:
+        result = urlparse(url)
+        return all([result.scheme, result.netloc])
+    except ValueError:
+        return False

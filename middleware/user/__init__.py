@@ -6,6 +6,7 @@
 from loguru import logger
 
 from cache.redis import cache
+from sdk.endpoint import openai
 from sdk.utils import sync
 from .schema import UserInfo
 
@@ -41,6 +42,22 @@ class SubManager(object):
     async def block_plugin(self, plugin_name: str):
         self.sub_info.plugin_subs.lock.append(plugin_name)
         return self.sub_info.plugin_subs.lock
+
+    async def unblock_plugin(self, plugin_name: str):
+        if plugin_name in self.sub_info.plugin_subs.lock:
+            self.sub_info.plugin_subs.lock.remove(plugin_name)
+        return self.sub_info.plugin_subs.lock
+
+    async def set_endpoint(self, endpoint: str = None, api_key: str = None):
+        if endpoint:
+            self.sub_info.llm_driver.endpoint = endpoint
+        if api_key:
+            self.sub_info.llm_driver.api_key = api_key
+        await self._upload(user_id=self.sub_info.user_id)
+
+    async def clear_endpoint(self):
+        self.sub_info.llm_driver = openai.Openai.Driver()
+        await self._upload(user_id=self.sub_info.user_id)
 
     async def get_lock_plugin(self):
         return self.sub_info.plugin_subs.lock
