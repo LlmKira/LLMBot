@@ -58,8 +58,9 @@ python3 start_receiver.py
     /chat - 聊天
     /task - 任务
     /tool - 工具列表
-    /bind - 绑定发送人
-    /block - 拉黑插件
+    /bind - 绑定可选平台
+    /unbind - 解绑可选平台
+    /clear - 删除自己的记录
 
 ## TODO
 
@@ -68,8 +69,8 @@ python3 start_receiver.py
 - [x] 订阅系统
 - [x] 插件的文件支持
 - [x] 插件的Openai支持
-- [x] 用户拉黑插件
-- [ ] 消费系统完善
+- [ ] 用户拉黑插件
+- [x] 消费系统完善
 - [ ] 图表示例插件
 - [ ] 插件管理器
 - [ ] 多 LLM 调度

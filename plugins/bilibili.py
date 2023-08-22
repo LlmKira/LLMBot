@@ -141,10 +141,12 @@ class AlarmTool(BaseTool):
         try:
             _set = Bili.parse_obj(arg)
             _search_result = await search_on_bilibili(_set.keywords)
-            _summary = await self.llm_task(task,
-                                           task_desc="""作为智能推荐AI，你找到了上面的搜索结果。请帮助我整理一下信息，需要带上视频链接""",
-                                           raw_data=_search_result
-                                           )
+            _question = task.message[0].text
+            _summary = await self.llm_task(
+                task,
+                task_desc=f"""按照上文搜索结果，请仔细思考阅读并回答我： *{_question}* ，附上视频链接""",
+                raw_data=_search_result
+            )
             await Task(queue=receiver.platform).send_task(
                 task=TaskHeader(
                     sender=task.sender,  # 继承发送者

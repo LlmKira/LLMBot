@@ -37,7 +37,7 @@ class Message(BaseModel):
         生成task
         """
         if not role:
-            role = "Please complete the order according to the task description refer to given information"
+            role = "[Scene: chatting in real time]\nPlease complete the order according to the task description refer to given information"
         return [
             cls(
                 role="system",
