@@ -4,6 +4,7 @@
 # @File    : schema.py
 # @Software: PyCharm
 import hashlib
+import time
 from io import BytesIO
 from typing import Union, List, Any, Literal, Optional
 
@@ -193,6 +194,40 @@ class TaskHeader(BaseModel):
             sender=receiver,
             receiver=receiver,
             message=message
+        )
+
+    @classmethod
+    def from_router(cls, from_, to_, user_id, method, message_text):
+        _meta_arg = {}
+        if method == "task":
+            _meta_arg["function_enable"] = True
+        elif method == "push":
+            _meta_arg["no_future_action"] = True
+        elif method == "chat":
+            _meta_arg["function_enable"] = False
+        meta = cls.Meta(
+            **_meta_arg
+        )
+        return cls(
+            task_meta=meta,
+            sender=cls.Location(
+                platform=from_,
+                chat_id=user_id,
+                user_id=user_id,
+                message_id=None
+            ),
+            receiver=cls.Location(
+                platform=to_,
+                chat_id=user_id,
+                user_id=user_id,
+                message_id=None
+            ),
+            message=RawMessage(
+                user_id=user_id,
+                chat_id=user_id,
+                text=message_text,
+                created_at=int(time.time())
+            )
         )
 
 

@@ -20,12 +20,15 @@ def router_set(role: Literal["sender", "receiver"], name: str):
         raise ValueError(f"role must in sender or receiver, not {role}")
 
 
+ROUTER_METHOD = Literal["push", "chat", "task"]
+
+
 class Router(BaseModel):
     from_: str = Field(..., description="Sender")
     to_: str = Field(..., description="Receiver")
     user_id: int = Field(..., description="用户ID")
     rules: str = Field(..., description="URL")
-    method: Literal["push", "chat"] = Field('push', description="")  # "summary"
+    method: ROUTER_METHOD = Field('push', description="")  # "summary"
 
     @classmethod
     def build_from_receiver(cls, receiver, user_id, dsn: str):
@@ -35,6 +38,8 @@ class Router(BaseModel):
             raise ValueError(f"dsn error {dsn},{e}. exp: rss@http://rss.toml@push")
         if from_ not in SENDER:
             raise ValueError(f"sender must in {SENDER}, not {from_}")
+        if _method not in list(ROUTER_METHOD):
+            raise ValueError(f"method must in {ROUTER_METHOD}, not {_method}")
         return cls(from_=from_, to_=receiver, user_id=user_id, rules=rules)
 
     def dsn(self, user_dsn=False):

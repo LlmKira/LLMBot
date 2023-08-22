@@ -8,12 +8,22 @@ import socket
 
 import feedparser
 import html2text
+import polling
 from pydantic import BaseModel
+from telebot import formatting
 
 from cache.redis import cache
+from middleware.router import RouterManager
 from middleware.router.schema import router_set
 
-router_set(role="sender", name="rss")
+__sender__ = "rss"
+
+from schema import TaskHeader
+from sdk.utils import sync
+
+from task import Task
+
+router_set(role="sender", name=__sender__)
 
 
 def sha1(string: str):
@@ -21,6 +31,63 @@ def sha1(string: str):
     _sha1 = hashlib.sha1()
     _sha1.update(string.encode('utf-8'))
     return _sha1.hexdigest()[:10]
+
+
+class RssApp(object):
+
+    def parse_entry(self, entry):
+        """
+        {
+                "title": entry["title"],
+                "url": entry["link"],
+                "id": entry["id"],
+                "author": entry["author"],
+                "summary": html2text.html2text(entry["summary"]),
+            }
+        """
+        message = formatting.format_text(
+            formatting.mbold(entry["title"]),
+            formatting.escape_markdown(entry["summary"]),
+            formatting.mlink(entry["author"], entry["url"]),
+            separator="\n",
+        )
+        return message
+
+    async def task(self):
+        _router_list = RouterManager().get_router_by_sender(__sender__)
+        for router in _router_list:
+            try:
+                _title, _entry = await Rss(feed_url=router.rules).get_updates()
+                for item in _entry:
+                    await Task(queue=router.to_).send_task(
+                        task=TaskHeader.from_router(
+                            from_=router.from_,
+                            to_=router.to_,
+                            user_id=router.user_id,
+                            method=router.method,
+                            message_text=self.parse_entry(item),
+                        )
+                    )
+            except Exception as e:
+                _title, _entry = f"Error When receive sub{router.rules}", []
+                await Task(queue=router.to_).send_task(
+                    task=TaskHeader.from_router(
+                        from_=router.from_,
+                        to_=router.to_,
+                        user_id=router.user_id,
+                        method=router.method,
+                        message_text=_title,
+                    )
+                )
+                continue
+
+    def polling(self, interval=60 * 60 * 1):
+        polling.poll(
+            sync(self.task()),
+            step=interval,
+            poll_forever=True,
+            timeout=60 * 20,
+        )
 
 
 class Rss(object):
@@ -86,5 +153,7 @@ class Rss(object):
         # 全部不一样
         if len(_updates) == len(_new):
             return await self.re_init(_load)
+        if len(_updates) == 0:
+            return _load.title, []
         # 部分不一样
         return self.update(cache_=_cache, update_=_load, keys=_updates)

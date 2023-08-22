@@ -10,6 +10,7 @@ from loguru import logger
 from telebot import util
 
 import plugins
+from .rss import RssApp
 from .telegram import TelegramBotRunner
 
 logger.remove()
@@ -23,6 +24,7 @@ logger.add(sink='run.log',
 __area__ = "sender"
 # 注册机器人事件
 telegram_bot = TelegramBotRunner().telegram()
+rss_app = RssApp()
 
 func = [
     telegram_bot.polling(
@@ -31,7 +33,8 @@ func = [
         skip_pending=False,
         timeout=60,
         request_timeout=60
-    )
+    ),
+    rss_app.polling(interval=60 * 60 * 1),
 ]
 
 # 初始化插件系统
