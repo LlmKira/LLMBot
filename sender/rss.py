@@ -59,6 +59,7 @@ class RssApp(object):
         _router_list = RouterManager().get_router_by_sender(__sender__)
         for router in _router_list:
             try:
+                logger.info(f"rss:send sub{router.rules}")
                 _title, _entry = await Rss(feed_url=router.rules).get_updates()
                 for item in _entry:
                     await Task(queue=router.to_).send_task(
@@ -87,6 +88,7 @@ class RssApp(object):
     async def rss_polling(self, interval=60 * 60 * 1):
         while True:
             await self.task()
+            # RSS 休眠
             await asyncio.sleep(interval)
 
 
@@ -127,7 +129,7 @@ class Rss(object):
 
     async def re_init(self, update: Update) -> (str, list):
         _entry = list(update.entry.values())[:1]
-        # await cache.set_data(key=self.db_key, value=update.json(), timeout=60 * 60 * 60 * 7)
+        await cache.set_data(key=self.db_key, value=update.json(), timeout=60 * 60 * 60 * 7)
         return update.title, _entry
 
     async def update(self, cache_, update_, keys):
@@ -140,20 +142,24 @@ class Rss(object):
         return update_.title, _return
 
     async def get_updates(self):
+        # 从缓存拉取
         _load = self.get_feed()
         _data = await cache.read_data(key=self.db_key)
         if not _data:
             return await self.re_init(_load)
         assert isinstance(_data, dict), "wrong rss data"
         _cache = self.Update.parse_obj(_data)
+
         # 验证是否全部不一样
         _old = list(_cache.entry.keys())
         _new = list(_load.entry.keys())
         _updates = [x for x in _new if x not in _old]
+
         # 全部不一样
         if len(_updates) == len(_new):
             return await self.re_init(_load)
         if len(_updates) == 0:
             return _load.title, []
+
         # 部分不一样
         return self.update(cache_=_cache, update_=_load, keys=_updates)
