@@ -3,8 +3,10 @@
 # @Author  : sudoskys
 # @File    : __init__.py.py
 # @Software: PyCharm
+import time
 from typing import List
 
+import telebot
 from aio_pika.abc import AbstractIncomingMessage
 from loguru import logger
 from telebot import TeleBot
@@ -57,12 +59,21 @@ class TelegramSender(object):
                     reply_to_message_id=reply_to_message_id,
                     caption=file_obj.file_name
                 )
-            self.bot.send_message(
-                chat_id=chat_id,
-                text=item.text,
-                reply_to_message_id=reply_to_message_id,
-                parse_mode="MarkdownV2"
-            )
+            try:
+                self.bot.send_message(
+                    chat_id=chat_id,
+                    text=item.text,
+                    reply_to_message_id=reply_to_message_id,
+                    parse_mode="MarkdownV2"
+                )
+            except telebot.apihelper.ApiTelegramException as e:
+                time.sleep(3)
+                logger.error("telegram send message error, retry")
+                self.bot.send_message(
+                    chat_id=chat_id,
+                    text=item.text,
+                    reply_to_message_id=reply_to_message_id
+                )
 
     def reply(self, chat_id, reply_to_message_id, message: List[Message]):
         for item in message:

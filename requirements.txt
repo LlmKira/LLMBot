@@ -27,3 +27,5 @@ tzlocal
 feedparser==6.0.10
 pillow
 inscriptis
+bilibili-api-python
+httpcore <=0.15

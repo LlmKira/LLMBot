@@ -31,6 +31,34 @@ class Message(BaseModel):
         # 过滤value中的None
         return {k: v for k, v in values.items() if v is not None}
 
+    @classmethod
+    def create_task_message_list(cls, task_desc, refer, role: str = None):
+        """
+        生成task
+        """
+        if not role:
+            role = "Please complete the order according to the task description refer to given information"
+        return [
+            cls(
+                role="system",
+                content=role,
+            ),
+            cls(
+                role="assistant",
+                content=refer,
+                name="information"
+            ),
+            cls(
+                role="user",
+                content=task_desc,
+                name="task"
+            ),
+            cls(
+                role="assistant",
+                content="ok , i will complete the tasks you give",
+            )
+        ]
+
 
 class Function(BaseModel):
     """

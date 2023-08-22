@@ -8,7 +8,7 @@ import time
 from io import BytesIO
 from typing import Union, List, Any, Literal, Optional
 
-from pydantic import Field, BaseModel
+from pydantic import Field, BaseModel, validator
 from telebot import types
 
 from cache.redis import cache
@@ -65,6 +65,14 @@ class RawMessage(BaseModel):
     class Config:
         arbitrary_types_allowed = True
         extra = "allow"
+
+    @validator("text")
+    def check_text(cls, v):
+        if v == "":
+            v = "message is empty"
+        if len(v) > 4096:
+            v = v[:4090]
+        return v
 
     @staticmethod
     async def download_file(file_id):

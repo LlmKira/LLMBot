@@ -59,7 +59,7 @@ class RssApp(object):
         _router_list = RouterManager().get_router_by_sender(__sender__)
         for router in _router_list:
             try:
-                logger.info(f"rss:send sub{router.rules}")
+                logger.info(f"Sender:rss sub {router.rules} sent")
                 _title, _entry = await Rss(feed_url=router.rules).get_updates()
                 for item in _entry:
                     await Task(queue=router.to_).send_task(
@@ -72,8 +72,8 @@ class RssApp(object):
                         )
                     )
             except Exception as e:
-                logger.exception(e)
-                _title, _entry = f"Error When receive sub{router.rules}", []
+                logger.error(e)
+                _title, _entry = f"Error When receive sub {router.rules}", []
                 await Task(queue=router.to_).send_task(
                     task=TaskHeader.from_router(
                         from_=router.from_,
@@ -87,9 +87,9 @@ class RssApp(object):
 
     async def rss_polling(self, interval=60 * 60 * 1):
         while True:
-            await self.task()
             # RSS 休眠
             await asyncio.sleep(interval)
+            await self.task()
 
 
 class Rss(object):
@@ -113,7 +113,7 @@ class Rss(object):
         try:
             json.dumps(res, indent=4, ensure_ascii=False)
         except Exception as e:
-            raise ValueError("Fetch rss feed error")
+            raise ValueError(f"Fetch rss feed error {e},not valid rss json")
         entries = res["entries"]
         _title = res["feed"]["title"]
         _entry = {}
@@ -162,4 +162,4 @@ class Rss(object):
             return _load.title, []
 
         # 部分不一样
-        return self.update(cache_=_cache, update_=_load, keys=_updates)
+        return await self.update(cache_=_cache, update_=_load, keys=_updates)

@@ -110,7 +110,7 @@ class Scraper(BaseModel):
             self.messages.pop()
 
     # 方法：获取消息
-    def get_messages(self) -> list[Message]:
+    def get_messages(self) -> List[Message]:
         # 按照顺序排序
         self.messages.sort(key=lambda x: x.order)
         _message = [message.message for message in self.messages]
