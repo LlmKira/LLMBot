@@ -3,12 +3,12 @@
 # @Author  : sudoskys
 # @File    : rss.py
 # @Software: PyCharm
+import asyncio
 import json
 import socket
 
 import feedparser
 import html2text
-import polling
 from pydantic import BaseModel
 from telebot import formatting
 
@@ -19,7 +19,6 @@ from middleware.router.schema import router_set
 __sender__ = "rss"
 
 from schema import TaskHeader
-from sdk.utils import sync
 
 from task import Task
 
@@ -81,13 +80,10 @@ class RssApp(object):
                 )
                 continue
 
-    def polling(self, interval=60 * 60 * 1):
-        polling.poll(
-            sync(self.task()),
-            step=interval,
-            poll_forever=True,
-            timeout=60 * 20,
-        )
+    async def rss_polling(self, interval=60 * 60 * 1):
+        while True:
+            await asyncio.sleep(interval)
+            await self.task()
 
 
 class Rss(object):
@@ -144,7 +140,7 @@ class Rss(object):
         _data = await cache.read_data(key=self.db_key)
         if not _data:
             return await self.re_init(_load)
-        assert isinstance(_data, dict) is not True, "wrong rss data"
+        assert isinstance(_data, dict), "wrong rss data"
         _cache = self.Update.parse_obj(_data)
         # 验证是否全部不一样
         _old = list(_cache.entry.keys())

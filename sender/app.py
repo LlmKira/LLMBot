@@ -34,7 +34,7 @@ func = [
         timeout=60,
         request_timeout=60
     ),
-    rss_app.polling(interval=60 * 60 * 1),
+    rss_app.rss_polling(interval=60 * 60 * 1),
 ]
 
 # 初始化插件系统

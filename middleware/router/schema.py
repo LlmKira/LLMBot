@@ -49,7 +49,7 @@ class Router(BaseModel):
 
 
 class RouterCache(BaseModel):
-    router: List[Router]
+    router: List[Router] = []
 
     @validator("router", always=True)
     def router_validate(cls, v):

@@ -6,17 +6,15 @@
 from loguru import logger
 
 from cache.redis import cache
-from schema import singleton
 from sdk.utils import sync
 from .schema import UserInfo
 
 
-@singleton
 class SubManager(object):
     def __init__(self, user_id: int):
         self.reload_exception = None
         self.sub_info: UserInfo = sync(self._sync(user_id=user_id))
-        assert isinstance(self.sub_info, UserInfo) is not True, "sub info error"
+        assert isinstance(self.sub_info, UserInfo), "sub info error"
 
     async def _upload(self, user_id: int, ignore_exception=False):
         if self.reload_exception and not ignore_exception:
@@ -36,6 +34,7 @@ class SubManager(object):
             return UserInfo(user_id=user_id)
         return sub_info
 
+    @property
     def llm_driver(self):
         return self.sub_info.llm_driver
 

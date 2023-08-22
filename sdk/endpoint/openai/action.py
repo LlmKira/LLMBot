@@ -8,6 +8,7 @@ import json
 from typing import List
 
 import tiktoken
+from loguru import logger
 from pydantic import BaseModel
 
 from sdk.schema import Message
@@ -116,7 +117,7 @@ class Scraper(BaseModel):
         # 去重
         # [*dict.fromkeys(_message)]
         # -> unhashable type: 'Message'
-        print(_message)
+        logger.debug(_message)
         return _message
 
     # 方法：获取消息数

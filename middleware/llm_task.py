@@ -14,6 +14,7 @@ from sdk.endpoint.openai import Message
 from sdk.endpoint.openai.action import Scraper
 from sdk.func_call import TOOL_MANAGER
 from sdk.memory.redis import RedisChatMessageHistory
+from sdk.utils import sync
 
 
 class OpenaiMiddleware(object):
@@ -64,7 +65,7 @@ class OpenaiMiddleware(object):
                 self.functions.extend(
                     TOOL_MANAGER.run_all_check(
                         message_text=message.text,
-                        ignore=self.sub_manager.get_lock_plugin()
+                        ignore=sync(self.sub_manager.get_lock_plugin())
                     )
                 )
         # 刮削器合并消息

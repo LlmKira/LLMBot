@@ -15,7 +15,7 @@ from sdk.endpoint import openai
 
 class UserInfo(BaseSettings):
     class Plugin(BaseModel):
-        lock: List[str]
+        lock: List[str] = []
 
     class Cost(BaseModel):
         cost_by: str = Field("chat", description="环节")
@@ -34,7 +34,7 @@ class UserInfo(BaseSettings):
     user_id: int = Field(None, description="用户ID")
     plugin_subs: Plugin = Field(Plugin(), description="插件的设置")
     costs: List[Cost] = Field([], description="消费记录")
-    llm_driver: Optional[openai.Openai.Driver] = openai.Openai.Driver()
+    llm_driver: openai.Openai.Driver = openai.Openai.Driver()
 
     def total_cost(self):
         return sum([cost.token_usage for cost in self.costs])

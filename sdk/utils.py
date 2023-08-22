@@ -41,6 +41,6 @@ def sha1_encrypt(string):
     sha1加密算法
     """
 
-    sha = hashlib.sha1(string)
+    sha = hashlib.sha1(string.encode('utf-8'))
     encrypts = sha.hexdigest()
     return encrypts[:8]
