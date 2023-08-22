@@ -51,6 +51,7 @@ class AlarmTool(BaseTool):
     """
     搜索工具
     """
+    silent: bool = False
     function: Function = alarm
     keywords: list = ["闹钟", "提醒", "定时", "到点", '分钟']
     pattern = re.compile(r"(\d+)(分钟|小时|天|周|月|年)后提醒我(.*)")
@@ -72,10 +73,11 @@ class AlarmTool(BaseTool):
                 return self.function
         return None
 
-    async def failed(self, platform, receiver, reason):
+    async def failed(self, platform, task, receiver, reason):
         try:
             await Task(queue=platform).send_task(
                 task=TaskHeader(
+                    sender=task.sender,
                     receiver=receiver,
                     task_meta=TaskHeader.Meta(no_future_action=True,
                                               callback=TaskHeader.Meta.Callback(
@@ -87,7 +89,7 @@ class AlarmTool(BaseTool):
                         RawMessage(
                             user_id=receiver.user_id,
                             chat_id=receiver.chat_id,
-                            text="🍖 操作失败，原因：{}".format(reason)
+                            text=f"🍖 {__plugin_name__}操作失败了！原因：{reason}"
                         )
                     ]
                 )
@@ -105,7 +107,8 @@ class AlarmTool(BaseTool):
             async def _send(receiver, _set):
                 await Task(queue=receiver.platform).send_task(
                     task=TaskHeader(
-                        receiver=receiver,
+                        sender=task.sender,  # 继承发送者
+                        receiver=receiver,  # 因为可能有转发，所以可以单配
                         task_meta=TaskHeader.Meta(no_future_action=True,
                                                   callback=TaskHeader.Meta.Callback(
                                                       role="function",
@@ -135,4 +138,4 @@ class AlarmTool(BaseTool):
                 pass
         except Exception as e:
             logger.exception(e)
-            await self.failed(platform=receiver.platform, receiver=receiver, reason=str(e))
+            await self.failed(platform=receiver.platform, task=task, receiver=receiver, reason=str(e))

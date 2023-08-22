@@ -9,15 +9,20 @@ from aio_pika.abc import AbstractIncomingMessage
 from loguru import logger
 from telebot import TeleBot
 
+from middleware.llm_task import OpenaiMiddleware
 from receiver import function
-from receiver.middleware import OpenaiMiddleware
 from schema import TaskHeader, RawMessage
+from sdk.func_call import TOOL_MANAGER
 from sdk.schema import Message
 from sdk.utils import sync
 from setting.telegram import BotSetting
 from task import Task
 
 __receiver__ = "telegram"
+
+from middleware.router.schema import router_set
+
+router_set(role="receiver", name=__receiver__)
 
 
 class TelegramSender(object):
@@ -55,7 +60,8 @@ class TelegramSender(object):
             self.bot.send_message(
                 chat_id=chat_id,
                 text=item.text,
-                reply_to_message_id=reply_to_message_id
+                reply_to_message_id=reply_to_message_id,
+                parse_mode="MarkdownV2"
             )
 
     def reply(self, chat_id, reply_to_message_id, message: List[Message]):
@@ -68,16 +74,25 @@ class TelegramSender(object):
 
     async def function(self, chat_id, reply_to_message_id, task: TaskHeader, message: Message):
         if not message.function_call:
-            raise ValueError("message not have function_call")
-        self.bot.send_message(
-            chat_id=chat_id,
-            text=f"🦴 Task be created: {message.function_call.name}",
-            reply_to_message_id=reply_to_message_id
-        )
+            raise ValueError("message not have function_call,forward type error")
+
+        # 获取设置查看是否静音
+        _tool = TOOL_MANAGER.get_tool(message.function_call.name)
+        if not _tool:
+            logger.warning(f"not found function {message.function_call.name}")
+            return None
+        if not _tool().silent:
+            self.bot.send_message(
+                chat_id=chat_id,
+                text=f"🦴 Task be created: {message.function_call.name}",
+                reply_to_message_id=reply_to_message_id
+            )
+
+        # 构建对应的消息
         receiver = task.receiver.copy()
         receiver.platform = __receiver__
-        # 运行函数
 
+        # 运行函数
         await Task(queue=function.__receiver__).send_task(
             task=TaskHeader.from_function(
                 parent_call=message,

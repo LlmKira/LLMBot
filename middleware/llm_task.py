@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2023/8/18 上午9:37
 # @Author  : sudoskys
-# @File    : middleware.py
+# @File    : llm_task.py
 # @Software: PyCharm
 from typing import List, Literal
 
 from loguru import logger
 
+from middleware.user import SubManager, UserInfo
 from schema import TaskHeader, RawMessage
 from sdk.endpoint import openai
 from sdk.endpoint.openai import Message
 from sdk.endpoint.openai.action import Scraper
 from sdk.func_call import TOOL_MANAGER
 from sdk.memory.redis import RedisChatMessageHistory
+from sdk.utils import sync
 
 
 class OpenaiMiddleware(object):
@@ -22,10 +24,10 @@ class OpenaiMiddleware(object):
     """
 
     def __init__(self, task: TaskHeader):
-        self.driver = openai.Openai.Driver()
         self.scraper = Scraper()  # 刮削器
         self.functions = []
         self.task = task
+        self.sub_manager = SubManager(user_id=self.task.sender.user_id)  # 由发送人承担接受者的成本
         self.message_history = RedisChatMessageHistory(session_id=str(task.receiver.user_id), ttl=60 * 60 * 1)
 
     def create(self):
@@ -59,7 +61,13 @@ class OpenaiMiddleware(object):
             _buffer.append(Message(role="user", content=message.text))
             # 创建函数系统
             if self.task.task_meta.function_enable:
-                self.functions.extend(TOOL_MANAGER.run_all_check(message_text=message.text))
+                # 用户可以拉黑插件
+                self.functions.extend(
+                    TOOL_MANAGER.run_all_check(
+                        message_text=message.text,
+                        ignore=sync(self.sub_manager.get_lock_plugin())
+                    )
+                )
         # 刮削器合并消息
         _total = 0
         for i, _msg in enumerate(_history):
@@ -80,10 +88,11 @@ class OpenaiMiddleware(object):
         self.scraper.reduce_messages(limit=openai.Openai.get_token_limit(model=model_name))
         message = self.scraper.get_messages()
         _functions = self.functions if self.functions else None
-
+        driver = self.sub_manager.llm_driver
+        assert isinstance(driver, openai.Openai.Driver), "llm_task.py:driver type error"
         # 消息缓存读取和转换
         endpoint = openai.Openai(
-            config=self.driver,
+            config=driver,
             model=model_name,
             messages=message,
             functions=_functions,
@@ -93,8 +102,10 @@ class OpenaiMiddleware(object):
         # 调用Openai
         result = await endpoint.create()
         _message = openai.Openai.parse_single_reply(response=result)
-
+        _usage = openai.Openai.parse_usage(response=result)
         self.message_history.add_message(message=_message)
-
+        await self.sub_manager.add_cost(
+            cost=UserInfo.Cost(token_usage=_usage, token_uuid=driver.uuid, model_name=model_name)
+        )
         logger.info(f"openai result:{result}")
         return _message

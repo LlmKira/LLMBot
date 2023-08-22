@@ -3,4 +3,7 @@
 # @Author  : sudoskys
 # @File    : start_receiver.py
 # @Software: PyCharm
+
 from receiver import app
+
+assert app.__area__ == "receiver", "receiver app error"

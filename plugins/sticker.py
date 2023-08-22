@@ -33,7 +33,7 @@ sticker.add_property(
 
 class Sticker(BaseModel):
     yes_no: str
-    comment: str = "OK I will do it"
+    comment: str = "done"
 
     class Config:
         extra = "allow"
@@ -94,10 +94,11 @@ class StickerTool(BaseTool):
                 return self.function
         return None
 
-    async def failed(self, platform, receiver, reason):
+    async def failed(self, platform, task, receiver, reason):
         try:
             await Task(queue=platform).send_task(
                 task=TaskHeader(
+                    sender=task.sender,
                     receiver=receiver,
                     task_meta=TaskHeader.Meta(no_future_action=True,
                                               callback=TaskHeader.Meta.Callback(
@@ -145,6 +146,7 @@ class StickerTool(BaseTool):
 
             await Task(queue=receiver.platform).send_task(
                 task=TaskHeader(
+                    sender=task.sender,
                     receiver=receiver,
                     task_meta=TaskHeader.Meta(no_future_action=True,
                                               callback=TaskHeader.Meta.Callback(
@@ -166,4 +168,4 @@ class StickerTool(BaseTool):
             logger.debug("convert_to_sticker say: {}".format(_set.yes_no))
         except Exception as e:
             logger.exception(e)
-            await self.failed(platform=receiver.platform, receiver=receiver, reason=str(e))
+            await self.failed(platform=receiver.platform, task=task, receiver=receiver, reason=str(e))

@@ -16,6 +16,7 @@ from sdk.schema import Message, Function
 from .action import Tokenizer, TokenizerObj
 from ...error import ValidationError
 from ...network import request
+from ...utils import sha1_encrypt
 
 load_dotenv()
 
@@ -45,6 +46,12 @@ class Openai(BaseModel):
             else:
                 raise ValidationError("api_key is required,pls set OPENAI_API_KEY in .env")
             return v
+
+        @property
+        def uuid(self):
+            # 取 api key 最后两位
+            _flag = self.api_key[-2:]
+            return f"{_flag}:{sha1_encrypt(self.api_key)}"
 
         class Config:
             env_file = '.env'
@@ -141,7 +148,7 @@ class Openai(BaseModel):
     def parse_usage(response: dict):
         if not response.get("usage"):
             raise ValidationError("usage is empty")
-        return response.get("usage")
+        return response.get("usage").get("total_tokens")
 
     async def create(self,
                      **kwargs

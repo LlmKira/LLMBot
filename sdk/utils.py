@@ -5,8 +5,8 @@ bilibili_api.utils.sync
 
 同步执行异步函数
 """
-
 import asyncio
+import hashlib
 from typing import Coroutine
 
 import nest_asyncio
@@ -17,7 +17,6 @@ nest_asyncio.apply()
 def __ensure_event_loop():
     try:
         asyncio.get_event_loop()
-
     except:
         asyncio.set_event_loop(asyncio.new_event_loop())
 
@@ -35,3 +34,13 @@ def sync(coroutine: Coroutine):
     __ensure_event_loop()
     loop = asyncio.get_event_loop()
     return loop.run_until_complete(coroutine)
+
+
+def sha1_encrypt(string):
+    """
+    sha1加密算法
+    """
+
+    sha = hashlib.sha1(string.encode('utf-8'))
+    encrypts = sha.hexdigest()
+    return encrypts[:8]

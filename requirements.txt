@@ -1,17 +1,29 @@
 pyTelegramBotAPI
 pathlib>=1.0.1
 loguru>=0.5.3
+polling
+
+
+# Network
 httpx>=0.23.3
 socksio
+
 pydantic<2.0.0
 beautifulsoup4>=4.11.1
 python-dotenv
+# DB
 elara
 redis>=4.5.4
+aio_pika
+
+#
 shortuuid
 tiktoken
-aio_pika
-apscheduler
-pillow
 nest-asyncio
+apscheduler
 tzlocal
+
+# plugin
+feedparser==6.0.10
+pillow
+inscriptis
