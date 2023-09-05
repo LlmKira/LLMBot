@@ -7,6 +7,8 @@ services:
     depends_on:
       - redis
       - rabbitmq
+    env_file:
+      - .env
     networks:
       - app-tier
   rabbitmq:
