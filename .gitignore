@@ -9,7 +9,7 @@ __pycache__/
 # C extensions
 *.so
 data
-
+redis
 # Distribution / packaging
 .Python
 build/
