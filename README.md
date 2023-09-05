@@ -47,13 +47,7 @@ alarm.add_property(
 ### Docker
 
 ```shell
-docker run -d\
-  -e OPENAI_API_KEY=xxx \
-  -e OPENAI_API_PROXY=xxx \
-  -e BOT_PROXY_ADDRESS=xxx \
-  -e BOT_TOKEN=xxx \
-  --name llmbot \
-  sudoskys/llmbot:latest
+docker-compose -f docker-compose.yml -p llmbot up -d llmbot
 ```
 
 ### Shell
