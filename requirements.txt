@@ -29,3 +29,10 @@ pillow
 inscriptis
 bilibili-api-python
 httpcore <=0.15
+duckduckgo_search
+
+# NLP
+numpy
+jieba
+fasttext-wheel
+scikit-learn

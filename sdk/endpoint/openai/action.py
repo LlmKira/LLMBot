@@ -129,8 +129,8 @@ class Scraper(BaseModel):
         if limit > 100:
             limit = limit - 70
         if TokenizerObj.num_tokens_from_messages(self.get_messages()) > limit:
-            # 从最低得分开始删除
-            self.messages.sort(key=lambda x: x.score)
+            # 从最旧开始删除
+            self.messages.sort(key=lambda x: x.order)
             while TokenizerObj.num_tokens_from_messages(self.get_messages()) > limit:
                 if len(self.messages) > 1:
                     self.messages.pop(0)

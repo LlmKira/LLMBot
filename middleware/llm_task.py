@@ -30,9 +30,10 @@ class OpenaiMiddleware(object):
         self.sub_manager = SubManager(user_id=self.task.sender.user_id)  # 由发送人承担接受者的成本
         self.message_history = RedisChatMessageHistory(session_id=str(task.receiver.user_id), ttl=60 * 60 * 1)
 
-    def create(self):
+    def build(self, write_back):
         # 先拉取记录再转换
-        self.create_message()
+        self.create_message(write_back=write_back)
+        self.append_function()
         return self
 
     def write_back(self,
@@ -45,20 +46,14 @@ class OpenaiMiddleware(object):
         for message in message_list:
             self.message_history.add_message(message=Message(role=role, name=name, content=message.text))
 
-    def create_message(self):
+    def append_function(self):
         """
-        转换消息
+        添加函数
         """
-        _history = []
-        _buffer = []
-        history_messages = self.message_history.messages
-        for i, message in enumerate(history_messages):
-            _history.append(message)
-        # 实时消息
+        self.functions = []
         raw_message = self.task.message
         raw_message: List[RawMessage]
         for i, message in enumerate(raw_message):
-            _buffer.append(Message(role="user", content=message.text))
             # 创建函数系统
             if self.task.task_meta.function_enable:
                 # 用户可以拉黑插件
@@ -68,17 +63,36 @@ class OpenaiMiddleware(object):
                         ignore=sync(self.sub_manager.get_lock_plugin())
                     )
                 )
-        # 刮削器合并消息
+
+    def create_message(self, write_back=True):
+        """
+        转换消息
+        """
+        _history = []
+        history_messages = self.message_history.messages
+        for i, message in enumerate(history_messages):
+            _history.append(message)
+        # 刮削器合并消息，这里评价简写了。
         _total = 0
         for i, _msg in enumerate(_history):
             _total += 1
-            self.scraper.add_message(_msg, score=i, order=_total)
-        for i, _msg in enumerate(_buffer):
-            _total += 1
-            self.scraper.add_message(_msg, score=i + 100, order=_total)
-        # save to history
-        for _msg in _buffer:
-            self.message_history.add_message(message=_msg)
+            self.scraper.add_message(_msg, score=len(str(_msg)), order=_total)
+
+        # 处理附带的任何原始消息
+        if write_back:
+            _buffer = []
+            # 实时消息
+            raw_message = self.task.message
+            raw_message: List[RawMessage]
+            for i, message in enumerate(raw_message):
+                _buffer.append(Message(role="user", content=message.text))
+            # 新消息的分数比较高
+            for i, _msg in enumerate(_buffer):
+                _total += 1
+                self.scraper.add_message(_msg, score=len(str(_msg)) + 100, order=_total)
+            # save to history
+            for _msg in _buffer:
+                self.message_history.add_message(message=_msg)
 
     async def func_message(self) -> Message:
         """
@@ -90,7 +104,10 @@ class OpenaiMiddleware(object):
         _functions = self.functions if self.functions else None
         driver = self.sub_manager.llm_driver
         assert isinstance(driver, openai.Openai.Driver), "llm_task.py:driver type error"
+
         # 消息缓存读取和转换
+        # 断点
+        logger.info(f" [x] Openai request:{message}")
         endpoint = openai.Openai(
             config=driver,
             model=model_name,

@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2023/8/22 下午2:03
+# @Time    : 2023/8/24 下午11:22
 # @Author  : sudoskys
-# @File    : bilibili.py
+# @File    : search.py
 # @Software: PyCharm
 
-import inscriptis
 from loguru import logger
 from pydantic import BaseModel
 
@@ -16,63 +15,70 @@ from sdk.func_call import BaseTool, listener
 from sdk.schema import Message
 from task import Task
 
-__plugin_name__ = "search_in_bilibili"
+__plugin_name__ = "search_in_google"
 
-bilibili = Function(name=__plugin_name__, description="Search videos on bilibili.com(哔哩哔哩)")
-bilibili.add_property(
+search = Function(name=__plugin_name__, description="Check uncertain/unknown/unknownEvents/Meme/ fact on google.com")
+search.add_property(
     property_name="keywords",
-    property_description="Keywords entered in the search box",
+    property_description="question entered in the search website",
     property_type="string",
     required=True
 )
 
 
-async def search_on_bilibili(keywords):
-    from bilibili_api import search
-    _result = await search.search_by_type(
-        keyword=keywords,
-        search_type=search.SearchObjectType.VIDEO,
-        order_type=search.OrderVideo.TOTALRANK,
-        page=1
-    )
-    _video_list = _result.get("result")
-    if not _video_list:
-        return "Search Not Success"
-    _video_list = _video_list[:3]  # 只取前三
-    _info = []
-    for video in _video_list:
-        _video_title = inscriptis.get_text(video.get("title"))
-        _video_author = video.get("author")
-        _video_url = video.get("arcurl")
-        _video_tag = video.get("tag")
-        _video_play = video.get("play")
-        _video_info = f"(Title={_video_title},Author={_video_author},Link={_video_url},Tag={_video_tag},Love={_video_play})"
-        _info.append(_video_info)
-    return "\n\n".join(_info)
+def search_on_duckduckgo(search_sentence: str, key_words: str = None):
+    from duckduckgo_search import DDGS
+    from .public.filter.sublimate import Sublimate
+    with DDGS(timeout=20) as ddgs:
+        _text = []
+        for r in ddgs.text(search_sentence):
+            _title = r.get("title")
+            _href = r.get("href")
+            _body = r.get("body")
+            _text.append(_body)
+    if key_words:
+        must_key = [key_words]
+    else:
+        must_key = None
+    _test_result = Sublimate(_text).valuation(match_sentence=search_sentence, match_keywords=must_key)
+    _result = []
+    for key in _test_result[:4]:
+        _result.append(key[0])
+    return "\nHintTip:".join(_result)
 
 
-class Bili(BaseModel):
+class Search(BaseModel):
     keywords: str
 
     class Config:
         extra = "allow"
 
 
-@listener(function=bilibili)
-class AlarmTool(BaseTool):
+@listener(function=search)
+class SearchTool(BaseTool):
     """
     搜索工具
     """
     silent: bool = True
-    function: Function = bilibili
-    keywords: list = ["哔哩哔哩", "b站", "B站", "视频", '搜索', '新闻', 'bilibili']
+    function: Function = search
+    keywords: list = [
+        "怎么", "How", "件事", "牢大", "作用", "知道", "什么", "认识", "What", "http",
+        "what", "who", "how", "Who",
+        "Why", "作品", "why", "Where",
+        "了解", "简述", "How to", "是谁", "how to",
+        "解释", "怎样的", "新闻", "ニュース", "电影", "番剧", "アニメ",
+        "2022", "2023", "请教", "介绍",
+        "怎样", "吗", "么", "？", "?", "呢",
+        "评价", "搜索", "百度", "谷歌", "bing", "谁是", "上网"
+    ]
 
     def pre_check(self):
         try:
-            import bilibili_api
+            from duckduckgo_search import DDGS
+            from .public.filter.sublimate import Sublimate
             return True
         except ImportError:
-            logger.error("plugin:package <bilibili_api> not installed")
+            logger.warning("plugin:package <duckduckgo_search> not found,please install it first")
             return False
 
     def func_message(self, message_text):
@@ -140,20 +146,16 @@ class AlarmTool(BaseTool):
         处理message，返回message
         """
         try:
-            _set = Bili.parse_obj(arg)
-            _search_result = await search_on_bilibili(_set.keywords)
+            _set = Search.parse_obj(arg)
+            _search_result = search_on_duckduckgo(_set.keywords)
             _question = task.message[0].text
-            _summary = await self.llm_task(
-                task,
-                task_desc=f"""按照上文搜索结果，总结比较信息，以模仿人类以中文短讯回答我的问题： *{_question}* ，附上链接""",
-                raw_data=_search_result
-            )
             await Task(queue=receiver.platform).send_task(
                 task=TaskHeader(
                     sender=task.sender,  # 继承发送者
                     receiver=receiver,  # 因为可能有转发，所以可以单配
                     task_meta=TaskHeader.Meta(
                         no_future_action=True,
+                        additional_reply=True,  # 立刻追加请求
                         callback=TaskHeader.Meta.Callback(
                             role="function",
                             name=__plugin_name__
@@ -163,11 +165,11 @@ class AlarmTool(BaseTool):
                         RawMessage(
                             user_id=receiver.user_id,
                             chat_id=receiver.chat_id,
-                            text=_summary
+                            text=_search_result
                         )
                     ]
                 )
             )
         except Exception as e:
             logger.exception(e)
-            await self.failed(platform=receiver.platform, task=task, receiver=receiver, reason=str(e))
+            await self.failed(platform=receiver.platform, task=task, receiver=receiver, reason="搜索失败了！")

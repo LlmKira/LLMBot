@@ -62,6 +62,8 @@ class TelegramBotRunner(object):
 
         async def create_task(message: types.Message, funtion_enable: bool = False):
             _file = []
+            if message.text:
+                message.text = message.text.lstrip("/chat").lstrip("/task")
             if message.photo:
                 _file.append(await telegram_to_file(message.photo[-1]))
             if message.document:

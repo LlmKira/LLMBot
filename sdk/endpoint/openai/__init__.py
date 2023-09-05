@@ -30,10 +30,18 @@ MODEL = Literal[
 
 
 class Openai(BaseModel):
+    class Proxy(BaseSettings):
+        proxy_address: str = Field(None, env="OPENAI_API_PROXY")  # "all://127.0.0.1:7890"
+
+        class Config:
+            env_file = '.env'
+            env_file_encoding = 'utf-8'
+            case_sensitive = True
+            arbitrary_types_allowed = True
+
     class Driver(BaseSettings):
         endpoint: HttpUrl = Field("https://api.openai.com/v1/chat/completions", env='OPENAI_API_ENDPOINT')
         api_key: str = Field(None, env='OPENAI_API_KEY')
-        proxy_address: str = Field(None, env="OPENAI_API_PROXY")  # "all://127.0.0.1:7890"
 
         # token: Tokenizer = TokenizerObj
         @validator("api_key")
@@ -56,7 +64,9 @@ class Openai(BaseModel):
         class Config:
             env_file = '.env'
             env_file_encoding = 'utf-8'
+            case_sensitive = True
             arbitrary_types_allowed = True
+            extra = "allow"
 
     config: Driver
     model: MODEL = "gpt-3.5-turbo-0613"
@@ -84,6 +94,10 @@ class Openai(BaseModel):
 
     # 用于调试
     echo: Optional[bool] = False
+
+    def get_proxy_settings(self):
+        proxy = self.Proxy()
+        return proxy
 
     def update_model(self, model: MODEL = "gpt-3.5-turbo"):
         self.model = model
@@ -183,7 +197,7 @@ class Openai(BaseModel):
                     "User-Agent": "Mozilla/5.0",
                     "Authorization": f"Bearer {self.config.api_key}"
                 },
-                proxy=self.config.proxy_address,
+                proxy=self.get_proxy_settings().proxy_address,
                 json_body=True
             )
         except httpx.ConnectError as e:

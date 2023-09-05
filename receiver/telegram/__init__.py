@@ -34,9 +34,11 @@ class TelegramSender(object):
 
     def __init__(self):
         self.bot = TeleBot(token=BotSetting.token)
+        from telebot import apihelper
         if BotSetting.proxy_address:
-            from telebot import apihelper
             apihelper.proxy = {'https': BotSetting.proxy_address}
+        else:
+            apihelper.proxy = None
 
     def forward(self, chat_id, reply_to_message_id, message: List[RawMessage]):
         for item in message:
@@ -135,30 +137,53 @@ class TelegramReceiver(object):
     def __init__(self):
         self.task = Task(queue=__receiver__)
 
+    @staticmethod
+    async def llm_request(llm_agent: OpenaiMiddleware):
+        try:
+            _message = await llm_agent.func_message()
+            print(f" [x] LLM Message {_message}")
+            return _message
+        except Exception as e:
+            logger.exception(e)
+            # return await message.ack()
+            return None
+
     async def on_message(self, message: AbstractIncomingMessage):
         await message.ack()
         # 解析数据
         _task: TaskHeader = TaskHeader.parse_raw(message.body)
         _llm = OpenaiMiddleware(task=_task)
         print(" [x] Received Order %r" % _task)
+
+        # 拦截注入内容
         if _task.task_meta.no_future_action:
-            __sender__.forward(
-                chat_id=_task.receiver.chat_id,
-                reply_to_message_id=_task.receiver.message_id,
-                message=_task.message
+            # 此函数回写了这里携带了的历史回调消息
+            _llm.write_back(
+                role=_task.task_meta.callback.role,
+                name=_task.task_meta.callback.name,
+                message_list=_task.message
             )
-            _llm.write_back(role=_task.task_meta.callback.role, name=_task.task_meta.callback.name,
-                            message_list=_task.message)
+            if _task.task_meta.additional_reply:
+                # 不回写任何原始消息
+                _llm.build(write_back=False)
+                _message = await self.llm_request(_llm)
+                __sender__.reply(
+                    chat_id=_task.receiver.chat_id,
+                    reply_to_message_id=_task.receiver.message_id,
+                    message=[_message]
+                )
+            else:
+                __sender__.forward(
+                    chat_id=_task.receiver.chat_id,
+                    reply_to_message_id=_task.receiver.message_id,
+                    message=_task.message
+                )
             return
-        try:
-            # 和 LLM 交互
-            _llm.create()
-            _message = await _llm.func_message()
-            print(f" [x] LLM Message {_message}")
-        except Exception as e:
-            logger.exception(e)
-            # return await message.ack()
-            return
+
+        _llm.build(write_back=True)  # 回写任何原始消息
+        _message = await self.llm_request(_llm)
+
+        # 拦截函数调用
         if hasattr(_message, "function_call"):
             await __sender__.function(
                 chat_id=_task.receiver.chat_id,
@@ -167,6 +192,8 @@ class TelegramReceiver(object):
                 message=_message
             )
             return
+
+        # 正常调用
         __sender__.reply(
             chat_id=_task.receiver.chat_id,
             reply_to_message_id=_task.receiver.message_id,
