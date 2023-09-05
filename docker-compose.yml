@@ -6,6 +6,9 @@ services:
     depends_on:
       - redis
       - rabbitmq
+    environment:
+      AMQP_DSN: amqp://admin:admin@rabbitmq:5672
+      REDIS_DSN: redis://redis:6379/0
     env_file:
       - .env
     networks:
