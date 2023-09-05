@@ -14,7 +14,7 @@ class RabbitMQ(BaseSettings):
     """
     代理设置
     """
-    amqp_dsn: str = Field("amqp://guest:guest@localhost/", env='AMQP_DSN')
+    amqp_dsn: str = Field("amqp://admin:admin@localhost:5672", env='AMQP_DSN')
 
     class Config:
         env_file = '.env'
