@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   llmbot:
-    image: sudoskys/llmbot:main
+    image: sudoskys/llmbot:latest
     command: python3 start_sender.py&python3 start_receiver.py
     depends_on:
       - redis
