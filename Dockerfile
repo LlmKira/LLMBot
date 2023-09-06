@@ -20,5 +20,4 @@ FROM python:3.10-slim
 ADD . $WORKDIR
 COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 
-
-ENTRYPOINT [ "./wait-for-it.sh", "rabbitmq:5672", "--", "sh", "./start.sh" ]
+ENTRYPOINT [ "sh", "./start.sh" ]
