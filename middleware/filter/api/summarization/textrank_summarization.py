@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-import jieba
+import cjieba
 import numpy as np
 from nltk.cluster.util import cosine_distance
 
@@ -32,7 +32,7 @@ def split_doc(doc, stopwords=None):
                 break
     for sent in sentences:
         if len(sent) > MIN_SEQ_LEN:
-            cut_sentences.append([word for word in jieba.cut(sent) if word not in stopwords])
+            cut_sentences.append([word for word in cjieba.cut(sent) if word not in stopwords])
             origin_sentences.append(sent)
     return origin_sentences, cut_sentences
 

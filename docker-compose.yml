@@ -8,10 +8,10 @@ services:
       resources:
         limits:
           cpus: '0.80'
-          memory: 990M
+          memory: 1500M
         reservations:
           cpus: '0.25'
-          memory: 550M
+          memory: 500M
     depends_on:
       - redis
       - rabbitmq

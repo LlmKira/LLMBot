@@ -37,3 +37,4 @@ numpy
 jieba
 fasttext-wheel
 scikit-learn
+cjieba

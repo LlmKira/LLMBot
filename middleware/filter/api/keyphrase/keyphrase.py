@@ -3,8 +3,7 @@
 
 import re
 
-import jieba
-import jieba.analyse
+import cjieba
 import numpy as np
 
 from ..solo import singleton
@@ -27,16 +26,18 @@ class KeyPhraseExtraction(object):
     def cut_sentences(self, text):
         """文本分句，然后分词"""
         sentences = re.findall(".*?[。？！]", text)
-        cut_sentences = [jieba.lcut(sent) for sent in sentences]
+        cut_sentences = [cjieba.lcut(sent) for sent in sentences]
         return cut_sentences
 
     def key_words_extraction(self, text):
         """提取关键词"""
         keywords_score = []
         if self.method == 'tfidf':
-            keywords_score = jieba.analyse.extract_tags(text, topK=self.topk, withWeight=True)
+            # keywords_score = jieba.analyse.extract_tags(text, topK=self.topk, withWeight=True)
+            keywords_score = cjieba.extract(text, top_k=self.topk, with_weight=True)
         elif self.method == 'textrank':
-            keywords_score = jieba.analyse.textrank(text, topK=self.topk, withWeight=True)
+            raise NotImplementedError('textrank method is not implemented')
+            # keywords_score = jieba.analyse.textrank(text, topK=self.topk, withWeight=True)
         return {word: score for word, score in keywords_score}
 
     def key_phrase_extraction(self, text):

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-import jieba.analyse
+import cjieba
 
 from ..solo import singleton
 from ..summarization import STOPWORDS
@@ -26,7 +26,8 @@ def split_doc(doc):
 
 
 def calculate_sentence_score(sentence, stopwords):
-    jieba_ret = jieba.analyse.extract_tags(sentence, topK=100, withWeight=True)  # , allowPOS=('ns', 'n', 'vn', 'v'))
+    # jieba_ret = jieba.analyse.extract_tags(sentence, topK=100, withWeight=True)  # , allowPOS=('ns', 'n', 'vn', 'v'))
+    jieba_ret = cjieba.extract(sentence, top_k=100, with_weight=True)
     sentence_score = 0
     for word, score in jieba_ret:
         if word not in stopwords:
