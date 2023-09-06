@@ -4,7 +4,6 @@ services:
   llmbot:
     image: sudoskys/llmbot:latest
     container_name: llmbot
-    restart: on-failure
     depends_on:
       - redis
       - rabbitmq
