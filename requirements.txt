@@ -32,6 +32,7 @@ httpcore <=0.15
 duckduckgo_search
 
 # NLP
+nltk
 numpy
 jieba
 fasttext-wheel
