@@ -4,6 +4,14 @@ services:
   llmbot:
     image: sudoskys/llmbot:latest
     container_name: llmbot
+    deploy:
+      resources:
+        limits:
+          cpus: '0.80'
+          memory: 990M
+        reservations:
+          cpus: '0.25'
+          memory: 550M
     depends_on:
       - redis
       - rabbitmq
