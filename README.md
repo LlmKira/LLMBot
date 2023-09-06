@@ -49,7 +49,7 @@ alarm.add_property(
 ### Docker
 
 ```shell
-docker-compose -f docker-compose.yml -p llmbot up -d llmbot
+docker-compose -f docker-compose.yml -p llmbot up -d llmbot --compatibility
 ```
 
 #### PM2
