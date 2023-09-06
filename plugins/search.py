@@ -17,7 +17,7 @@ from task import Task
 
 __plugin_name__ = "search_in_google"
 
-search = Function(name=__plugin_name__, description="Check uncertain/unknown/unknownEvents/Meme/ fact on google.com")
+search = Function(name=__plugin_name__, description="Search/validate uncertain/unknownEvents/Meme fact on google.com")
 search.add_property(
     property_name="keywords",
     property_description="question entered in the search website",
