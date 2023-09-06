@@ -44,11 +44,21 @@ alarm.add_property(
 
 ## 📝 部署指南
 
+请确认您的系统为UTF8，`dpkg-reconfigure locales`
+
 ### Docker
 
 ```shell
 docker-compose -f docker-compose.yml -p llmbot up -d llmbot
 ```
+
+#### PM2
+
+````
+apt install npm
+npm install pm2 -g
+pm2 start pm2.json
+````
 
 ### Shell
 
