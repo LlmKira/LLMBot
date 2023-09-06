@@ -1,10 +1,12 @@
 FROM python:3.10-slim AS builder
 RUN apt update && apt install build-essential -y
-RUN apt-get install -y npm
+
 COPY ./requirements.txt .
 
 RUN pip install --upgrade --no-cache-dir pip && pip install --no-cache-dir -r requirements.txt
-RUN npm install pm2 -g
+
+#RUN apt-get install -y npm
+#RUN npm install pm2 -g
 
 COPY ./wait-for-it.sh .
 RUN chmod +x /wait-for-it.sh
