@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-
-import jieba
-import jieba.analyse
+import cjieba
 
 
 def cut_words_weights(content):
@@ -14,7 +12,8 @@ def cut_words_weights(content):
     # jieba提取关键词及其权重
     # 设置停用词
     # jieba.analyse.set_stop_words('path_of_stopwords')
-    tags = jieba.analyse.extract_tags(content, topK=20, withWeight=True)
+    # tags = jieba.analyse.extract_tags(content, topK=20, withWeight=True)
+    tags = cjieba.extract(text=content, top_k=20, with_weight=True)
     tags = [(keyword, int(weight * 10)) for keyword, weight in tags]
     return tags
 
