@@ -86,7 +86,7 @@ class Sublimate(object):
             return []
 
         # 提取句子成分
-        _keywords = Extraction.tfidf_keywords(match_sentence)
+        _keywords = Extraction.tfidf_keywords(match_sentence)  # 高开销注意
         # 对其筛选评分
         __total = len(_keywords)
         for order_obj in self.valuate:
@@ -101,6 +101,7 @@ class Sublimate(object):
 
         # 相似度计算方法
         for order_obj in self.valuate:
+            # 高开销注意
             _z_sim = ((Sim.cosion_similarity(pre=match_sentence, aft=order_obj.text)) * 100) * self.z_factor
             order_obj.z_sim = _z_sim
 

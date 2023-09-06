@@ -15,6 +15,9 @@ class CosionSimilarity(object):
     one-hot编码
     """
 
+    def __init__(self):
+        self.stopwords = self.load_stopwords(STOPWORDS)
+
     def load_stopwords(self, stopwords_path):
         with open(stopwords_path, 'r', encoding='utf-8') as f:
             return [line.strip() for line in f]
@@ -23,18 +26,16 @@ class CosionSimilarity(object):
         return [word for word in jieba.cut(text) if word not in stopwords]
 
     def str_to_vector(self, text1: str, text2: str) -> Tuple[list, list]:
-        stopwords = self.load_stopwords(STOPWORDS)
-        text1_words = set(self.cut_words(text1, stopwords))
-        text2_words = set(self.cut_words(text2, stopwords))
+        text1_words = set(self.cut_words(text1, self.stopwords))
+        text2_words = set(self.cut_words(text2, self.stopwords))
         all_words = list(text1_words | text2_words)
         text1_vector = [1 if word in text1_words else 0 for word in all_words]
         text2_vector = [1 if word in text2_words else 0 for word in all_words]
         return text1_vector, text2_vector
 
     def similarity(self, text1: Union[str, list], text2: Union[str, list]):
-        stopwords = self.load_stopwords(STOPWORDS)
-        text1_words = set(self.cut_words(text1, stopwords))
-        text2_words = set(self.cut_words(text2, stopwords))
+        text1_words = set(self.cut_words(text1, self.stopwords))
+        text2_words = set(self.cut_words(text2, self.stopwords))
         all_words = list(text1_words | text2_words)
         text1_vector = [1 if word in text1_words else 0 for word in all_words]
         text2_vector = [1 if word in text2_words else 0 for word in all_words]
@@ -43,7 +44,7 @@ class CosionSimilarity(object):
         return cosine_similarity([text1_vector], [text2_vector])[0][0]
 
     @staticmethod
-    def vector_similarity(self, text1_vector: list, text2_vector: list):
+    def vector_similarity(text1_vector: list, text2_vector: list):
         from sklearn.metrics.pairwise import cosine_similarity
         return cosine_similarity([text1_vector], [text2_vector])[0][0]
 
