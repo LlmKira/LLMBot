@@ -71,8 +71,8 @@ class AlarmTool(BaseTool):
         try:
             import bilibili_api
             return True
-        except ImportError:
-            logger.error("plugin:package <bilibili_api> not installed")
+        except ImportError as e:
+            logger.error(f"plugin:package <bilibili_api> not installed:{e}")
             return False
 
     def func_message(self, message_text):

@@ -29,7 +29,7 @@ class Task(object):
         async with connection:
             channel = await connection.channel()
             message = Message(
-                task.json().encode(), delivery_mode=DeliveryMode.PERSISTENT,
+                task.json().encode("utf-8"), delivery_mode=DeliveryMode.PERSISTENT,
             )
             await channel.declare_queue(
                 self.queue_name, durable=True,

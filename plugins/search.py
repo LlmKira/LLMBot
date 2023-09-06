@@ -77,8 +77,8 @@ class SearchTool(BaseTool):
             from duckduckgo_search import DDGS
             from middleware.filter.sublimate import Sublimate
             return True
-        except ImportError:
-            logger.warning("plugin:package <duckduckgo_search> not found,please install it first")
+        except ImportError as e:
+            logger.warning(f"plugin:package <duckduckgo_search> not found,please install it first:{e}")
             return False
 
     def func_message(self, message_text):
