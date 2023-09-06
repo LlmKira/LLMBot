@@ -8,7 +8,7 @@ RUN pip install --upgrade --no-cache-dir pip && pip install --no-cache-dir -r re
 #RUN apt-get install -y npm
 #RUN npm install pm2 -g
 
-COPY ./wait-for-it.sh .
+COPY wait-for-it.sh /wait-for-it.sh
 RUN chmod +x /wait-for-it.sh
 
 COPY ./start.sh .
