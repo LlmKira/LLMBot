@@ -48,7 +48,7 @@ async def search_on_bilibili(keywords):
         _video_play = video.get("play")
         _video_info = f"(Title={_video_title},Author={_video_author},Link={_video_url},Tag={_video_tag},Love={_video_play})"
         _info.append(_video_info)
-    return "\n\n".join(_info)
+    return "\nHintData".join(_info)
 
 
 class Bili(BaseModel):
@@ -143,17 +143,13 @@ class AlarmTool(BaseTool):
             _set = Bili.parse_obj(arg)
             _search_result = await search_on_bilibili(_set.keywords)
             _question = task.message[0].text
-            _summary = await self.llm_task(
-                task,
-                task_desc=f"""按照上文搜索结果，总结比较信息，以模仿人类以中文短讯回答我的问题： *{_question}* ，附上链接""",
-                raw_data=_search_result
-            )
             await Task(queue=receiver.platform).send_task(
                 task=TaskHeader(
                     sender=task.sender,  # 继承发送者
                     receiver=receiver,  # 因为可能有转发，所以可以单配
                     task_meta=TaskHeader.Meta(
                         no_future_action=True,
+                        additional_reply=True,
                         callback=TaskHeader.Meta.Callback(
                             role="function",
                             name=__plugin_name__
@@ -163,7 +159,7 @@ class AlarmTool(BaseTool):
                         RawMessage(
                             user_id=receiver.user_id,
                             chat_id=receiver.chat_id,
-                            text=_summary
+                            text=_search_result
                         )
                     ]
                 )
