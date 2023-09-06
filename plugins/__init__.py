@@ -21,5 +21,6 @@ __all__ = [f.strip(".py") for f in os.listdir(os.path.abspath(os.path.dirname(__
 def setup():
     logger.info("Plugin setup")
     for _, file, _ in pkgutil.iter_modules([pkg_path]):
-        __import__(pkg_name + '.' + file)
+        if not file == "public":
+            __import__(pkg_name + '.' + file)
         logger.info(f"Plugin loaded success:{file}")
