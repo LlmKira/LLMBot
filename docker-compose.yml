@@ -15,7 +15,6 @@ services:
       - .env
     networks:
       - app-tier
-    command: [ "sh", "./start.sh" ]
 
   rabbitmq:
     image: rabbitmq:3-management
