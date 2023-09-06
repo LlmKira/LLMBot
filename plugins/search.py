@@ -59,7 +59,7 @@ class SearchTool(BaseTool):
     """
     搜索工具
     """
-    silent: bool = True
+    silent: bool = False
     function: Function = search
     keywords: list = [
         "怎么", "How", "件事", "牢大", "作用", "知道", "什么", "认识", "What", "http",

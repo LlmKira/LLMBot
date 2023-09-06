@@ -3,9 +3,12 @@ from typing import Tuple, Union
 
 import jieba
 from sklearn.metrics.pairwise import cosine_similarity
+
+from ..solo import singleton
 from ...api.keywords import STOPWORDS
 
 
+@singleton
 class CosionSimilarity(object):
     """
     根据余弦函数计算相似性

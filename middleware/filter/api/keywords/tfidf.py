@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import os
 import jieba
 import jieba.analyse
+
 from ..keywords import STOPWORDS
+from ..solo import singleton
 
 
+@singleton
 class TfidfKeywords:
     def __init__(self, delete_stopwords=True, topK=20, withWeight=False):
         if delete_stopwords:

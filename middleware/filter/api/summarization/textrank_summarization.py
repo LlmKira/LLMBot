@@ -5,6 +5,7 @@ import jieba
 import numpy as np
 from nltk.cluster.util import cosine_distance
 
+from ..solo import singleton
 from ..summarization import STOPWORDS as STOPWORDS_PATH
 
 MIN_SEQ_LEN = 0
@@ -89,6 +90,7 @@ def pagerank(A, eps=0.0001, d=0.85):
         P = new_P
 
 
+@singleton
 class TextRankSummarization:
     def __init__(self, ratio):
         self.ratio = ratio

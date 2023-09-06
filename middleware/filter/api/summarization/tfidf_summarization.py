@@ -2,6 +2,8 @@
 
 
 import jieba.analyse
+
+from ..solo import singleton
 from ..summarization import STOPWORDS
 
 
@@ -32,6 +34,7 @@ def calculate_sentence_score(sentence, stopwords):
     return sentence_score
 
 
+@singleton
 class TfidfSummarization:
     def __init__(self, ratio=0.2):
         self.ratio = ratio

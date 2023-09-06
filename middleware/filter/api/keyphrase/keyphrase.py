@@ -7,10 +7,12 @@ import jieba
 import jieba.analyse
 import numpy as np
 
+from ..solo import singleton
+
 
 # from wordcloud import WordCloud
 
-
+@singleton
 class KeyPhraseExtraction(object):
     def __init__(self, topk=50, method='tfidf', with_word=True):
         """
