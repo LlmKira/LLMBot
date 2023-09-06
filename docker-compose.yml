@@ -11,7 +11,7 @@ services:
           memory: 1500M
         reservations:
           cpus: '0.25'
-          memory: 700M
+          memory: 500M
     depends_on:
       - redis
       - rabbitmq
