@@ -28,7 +28,7 @@ search.add_property(
 
 def search_on_duckduckgo(search_sentence: str, key_words: str = None):
     from duckduckgo_search import DDGS
-    from .public.filter.sublimate import Sublimate
+    from middleware.filter import Sublimate
     with DDGS(timeout=20) as ddgs:
         _text = []
         for r in ddgs.text(search_sentence):
@@ -75,7 +75,7 @@ class SearchTool(BaseTool):
     def pre_check(self):
         try:
             from duckduckgo_search import DDGS
-            from .public.filter.sublimate import Sublimate
+            from middleware.filter import Sublimate
             return True
         except ImportError:
             logger.warning("plugin:package <duckduckgo_search> not found,please install it first")
