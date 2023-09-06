@@ -107,7 +107,7 @@ class OpenaiMiddleware(object):
 
         # 消息缓存读取和转换
         # 断点
-        logger.info(f" [x] Openai request:{message}")
+        logger.debug(f" [x] Openai request:{message}")
         endpoint = openai.Openai(
             config=driver,
             model=model_name,
