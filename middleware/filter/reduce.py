@@ -5,7 +5,7 @@
 # @Software: PyCharm
 from typing import List, Any
 
-import jieba
+import cjieba
 import numpy as np
 from sklearn.cluster import Birch
 from sklearn.feature_extraction.text import CountVectorizer
@@ -26,7 +26,7 @@ class Cluster(object):
         for line in sentence_list:
             title = line.strip()
             self.title_dict[index] = title
-            output = ' '.join(['%s' % x for x in list(jieba.cut(title, cut_all=False))]).encode('utf-8')  # 空格拼接
+            output = ' '.join(['%s' % x for x in list(cjieba.cut(title, cut_all=False))]).encode('utf-8')  # 空格拼接
             index += 1
             corpus.append(output.strip())
         _vectorizer = CountVectorizer()
