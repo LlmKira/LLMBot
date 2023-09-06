@@ -1,5 +1,9 @@
 # LLMBot
 
+![Docker Image Size (tag)](https://img.shields.io/docker/image-size/sudoskys/llmbot/latest)
+![Docker Image Version (latest semver)](https://img.shields.io/docker/v/sudoskys/llmbot)
+![docker workflow](https://github.com/llmkira/llmbot/actions/workflows/docker-ci.yaml/badge.svg)
+
 LLMBot 是基于消息队列的机器人助手，可以装载插件完成许多功能。为 Gpt Func Call 和 广播机制的验证项目。
 
 与 `OpenaiBot` 项目不同的是，此项目尝试基于 消息平台 复刻 ChatGpt 的插件系统。实现部分或更进一步的功能。
