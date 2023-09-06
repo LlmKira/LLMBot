@@ -44,7 +44,8 @@ def search_on_duckduckgo(search_sentence: str, key_words: str = None):
     _result = []
     for key in _test_result[:4]:
         _result.append(key[0])
-    return "\nHintTip:".join(_result)
+        # hidden clues
+    return "\nHint Clues:".join(_result)
 
 
 class Search(BaseModel):
