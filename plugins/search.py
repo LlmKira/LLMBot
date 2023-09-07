@@ -102,7 +102,7 @@ class SearchTool(BaseTool):
                 task=TaskHeader(
                     sender=task.sender,
                     receiver=receiver,
-                    task_meta=TaskHeader.Meta(no_future_action=True,
+                    task_meta=TaskHeader.Meta(callback_forward=True,
                                               callback=TaskHeader.Meta.Callback(
                                                   role="function",
                                                   name=__plugin_name__
@@ -155,8 +155,8 @@ class SearchTool(BaseTool):
                     sender=task.sender,  # 继承发送者
                     receiver=receiver,  # 因为可能有转发，所以可以单配
                     task_meta=TaskHeader.Meta(
-                        no_future_action=True,
-                        additional_reply=True,  # 立刻追加请求
+                        callback_forward=True,
+                        reprocess_needed=True,  # 立刻追加请求
                         callback=TaskHeader.Meta.Callback(
                             role="function",
                             name=__plugin_name__

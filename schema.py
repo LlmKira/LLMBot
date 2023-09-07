@@ -108,16 +108,20 @@ class RawMessage(BaseModel):
 
 class TaskHeader(BaseModel):
     class Meta(BaseModel):
+        # Meta 信息混乱，我很担心
         class Callback(BaseModel):
             role: Literal["user", "system", "function", "assistant"] = Field("user", description="角色")
             name: str = Field(None, description="功能名称", regex=r"^[a-zA-Z0-9_]+$")
 
-        no_future_action: bool = Field(False, description="非 LLM 转发")
-        additional_reply: bool = Field(False, description="追加LLM回复,追加存储处理后再回复")
         function_enable: bool = Field(False, description="功能开关")
-        parent_call: Any = Field(None, description="父消息")
-        callback: Callback = Field(Callback(), description="函数回调信息")
-        extra_args: dict = Field({}, description="额外参数")
+
+        callback_forward: bool = Field(False, description="非 LLM 转发")
+        reprocess_needed: bool = Field(False, description="追加LLM回复,追加存储处理后再回复")
+
+        verify_needed: bool = Field(False, description="此请求被分流标记需要平台的权限验证才能被执行")
+        parent_call: Any = Field(None, description="存储上一个节点的父消息，用于插件的原始消息信息存储")
+        callback: Callback = Field(Callback(), description="插件返回的消息头，标识了 function 的名字")
+        extra_args: dict = Field({}, description="任何额外参数")
 
         class Config:
             arbitrary_types_allowed = True
@@ -224,7 +228,7 @@ class TaskHeader(BaseModel):
         if method == "task":
             _meta_arg["function_enable"] = True
         elif method == "push":
-            _meta_arg["no_future_action"] = True
+            _meta_arg["callback_forward"] = True
         elif method == "chat":
             _meta_arg["function_enable"] = False
         meta = cls.Meta(

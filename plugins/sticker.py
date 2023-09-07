@@ -100,7 +100,7 @@ class StickerTool(BaseTool):
                 task=TaskHeader(
                     sender=task.sender,
                     receiver=receiver,
-                    task_meta=TaskHeader.Meta(no_future_action=True,
+                    task_meta=TaskHeader.Meta(callback_forward=True,
                                               callback=TaskHeader.Meta.Callback(
                                                   role="function",
                                                   name=__plugin_name__
@@ -148,7 +148,7 @@ class StickerTool(BaseTool):
                 task=TaskHeader(
                     sender=task.sender,
                     receiver=receiver,
-                    task_meta=TaskHeader.Meta(no_future_action=True,
+                    task_meta=TaskHeader.Meta(callback_forward=True,
                                               callback=TaskHeader.Meta.Callback(
                                                   role="function",
                                                   name=__plugin_name__

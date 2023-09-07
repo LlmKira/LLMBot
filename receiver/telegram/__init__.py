@@ -156,29 +156,28 @@ class TelegramReceiver(object):
         print(" [x] Received Order %r" % _task)
 
         # 拦截注入内容
-        if _task.task_meta.no_future_action:
+        if _task.task_meta.callback_forward:
             # 此函数回写了这里携带了的历史回调消息
             _llm.write_back(
                 role=_task.task_meta.callback.role,
                 name=_task.task_meta.callback.name,
                 message_list=_task.message
             )
-            if _task.task_meta.additional_reply:
+            if _task.task_meta.reprocess_needed:
                 # 不回写任何原始消息
                 _llm.build(write_back=False)
                 _message = await self.llm_request(_llm)
-                __sender__.reply(
+                return __sender__.reply(
                     chat_id=_task.receiver.chat_id,
                     reply_to_message_id=_task.receiver.message_id,
                     message=[_message]
                 )
-            else:
-                __sender__.forward(
-                    chat_id=_task.receiver.chat_id,
-                    reply_to_message_id=_task.receiver.message_id,
-                    message=_task.message
-                )
-            return
+
+            return __sender__.forward(
+                chat_id=_task.receiver.chat_id,
+                reply_to_message_id=_task.receiver.message_id,
+                message=_task.message
+            )
 
         _llm.build(write_back=True)  # 回写任何原始消息
         _message = await self.llm_request(_llm)
