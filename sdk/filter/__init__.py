@@ -5,3 +5,4 @@
 # @Software: PyCharm
 
 # 去噪声算法
+from .sublimate import Sublimate

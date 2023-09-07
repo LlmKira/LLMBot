@@ -27,8 +27,7 @@ telegram_bot = TelegramBotRunner().telegram()
 rss_app = RssApp()
 
 func = [
-    telegram_bot.polling(
-        non_stop=True,
+    telegram_bot.infinity_polling(
         allowed_updates=util.update_types,
         skip_pending=True,
         timeout=60,

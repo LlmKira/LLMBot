@@ -73,10 +73,8 @@ class OpenaiMiddleware(object):
         for i, message in enumerate(history_messages):
             _history.append(message)
         # 刮削器合并消息，这里评价简写了。
-        _total = 0
         for i, _msg in enumerate(_history):
-            _total += 1
-            self.scraper.add_message(_msg, score=len(str(_msg)), order=_total)
+            self.scraper.add_message(_msg, score=len(str(_msg)))
 
         # 处理附带的任何原始消息
         if write_back:
@@ -88,8 +86,7 @@ class OpenaiMiddleware(object):
                 _buffer.append(Message(role="user", content=message.text))
             # 新消息的分数比较高
             for i, _msg in enumerate(_buffer):
-                _total += 1
-                self.scraper.add_message(_msg, score=len(str(_msg)) + 100, order=_total)
+                self.scraper.add_message(_msg, score=len(str(_msg)) + 50)
             # save to history
             for _msg in _buffer:
                 self.message_history.add_message(message=_msg)

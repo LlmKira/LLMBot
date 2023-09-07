@@ -11,6 +11,7 @@ import tiktoken
 from loguru import logger
 from pydantic import BaseModel
 
+from sdk.filter.evaluate import Sim
 from sdk.schema import Message
 
 
@@ -99,15 +100,19 @@ class Scraper(BaseModel):
     # 最大消息数
     max_messages: int = 12
 
+    # 计数器
+    tick: int = 0
+
     # 方法：添加消息
-    def add_message(self, message: Message, score: float, order: int):
+    def add_message(self, message: Message, score: float):
         if hasattr(message, "function_call"):
             return None
-        self.messages.append(self.Sorter(message=message, score=score, order=order))
+        self.messages.append(self.Sorter(message=message, score=score, order=self.tick))
+        self.tick += 1
         # 按照顺序排序
         self.messages.sort(key=lambda x: x.order)
-        if len(self.messages) > self.max_messages:
-            self.messages.pop()
+        while len(self.messages) > self.max_messages:
+            self.messages.pop(0)
 
     # 方法：获取消息
     def get_messages(self) -> List[Message]:
@@ -120,14 +125,37 @@ class Scraper(BaseModel):
         logger.debug(_message)
         return _message
 
+    def build_messages(self):
+        # 只取三个，末位匹配
+        _message = self.get_messages()
+        if len(_message) < 3:
+            return _message
+        _build = []
+        _must = _message[-3:]
+        _check_list = _message[:-3]
+        _match_sentence = _message[-1:][0].content
+        for item_obj in _check_list:
+            if Sim.cosion_similarity(pre=_match_sentence, aft=item_obj.content) < 0.9:
+                _build.append(item_obj)
+            else:
+                pass
+                # logger.warning(f"ignore sim item {item_obj}")
+        _build.extend(_must)
+        return _build
+
     # 方法：获取消息数
     def get_num_messages(self) -> int:
         return len(self.messages)
 
     # 方法：清除消息到负载
     def reduce_messages(self, limit: int = 2048):
-        if limit > 100:
+        # 预留位
+        if limit > 1000:
+            limit = limit - 250
+        else:
             limit = limit - 70
+
+        # 执行删除操作
         if TokenizerObj.num_tokens_from_messages(self.get_messages()) > limit:
             # 从最旧开始删除
             self.messages.sort(key=lambda x: x.order)
