@@ -32,13 +32,11 @@ func = [
 plugins.setup()
 
 
-async def main():
+async def _main():
     await asyncio.gather(
         *func
     )
 
 
-for i in func:
-    logger.success(f"Receiver start:{i.__name__}")
 loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
+loop.run_until_complete(_main())

@@ -7,7 +7,6 @@ import asyncio
 import sys
 
 from loguru import logger
-from telebot import util
 
 import plugins
 from .rss import RssApp
@@ -21,18 +20,15 @@ logger.add(sink='run.log',
            rotation="100 MB",
            enqueue=True
            )
+
 __area__ = "sender"
+
 # 注册机器人事件
 telegram_bot = TelegramBotRunner().telegram()
 rss_app = RssApp()
 
 func = [
-    telegram_bot.infinity_polling(
-        allowed_updates=util.update_types,
-        skip_pending=True,
-        timeout=60,
-        request_timeout=60
-    ),
+    telegram_bot,
     rss_app.rss_polling(interval=60 * 60 * 1),
 ]
 
@@ -40,14 +36,11 @@ func = [
 plugins.setup()
 
 
-async def main():
+async def _main():
     await asyncio.gather(
         *func
     )
 
 
-for i in func:
-    logger.success(f"Sender start:{i.__name__}")
-
 loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
+loop.run_until_complete(_main())

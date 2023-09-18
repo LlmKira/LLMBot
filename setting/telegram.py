@@ -12,11 +12,11 @@ class TelegramBot(BaseSettings):
     """
     代理设置
     """
-    token: str = Field(None, env='BOT_TOKEN')
-    proxy_address: str = Field(None, env="BOT_PROXY_ADDRESS")  # "all://127.0.0.1:7890"
-    bot_link: str = Field(None, env='BOT_LINK')
-    bot_id: str = Field(None, env="BOT_ID")
-    bot_username: str = Field(None, env="BOT_USERNAME")
+    token: str = Field(None, env='TELEGRAM_BOT_TOKEN')
+    proxy_address: str = Field(None, env="TELEGRAM_BOT_PROXY_ADDRESS")  # "all://127.0.0.1:7890"
+    bot_link: str = Field(None, env='TELEGRAM_BOT_LINK')
+    bot_id: str = Field(None, env="TELEGRAM_BOT_ID")
+    bot_username: str = Field(None, env="TELEGRAM_BOT_USERNAME")
 
     class Config:
         env_file = '.env'
@@ -44,10 +44,14 @@ class TelegramBot(BaseSettings):
                 values['bot_username'] = _bot.username
                 values['bot_link'] = f"https://t.me/{values['bot_username']}"
             except Exception as e:
-                logger.error(f"Bot id is None, {e}")
+                logger.error(f"TelegramBot id is None, {e}")
             else:
                 logger.success(f"TelegramBot connect success: {values.get('bot_username')}")
         return values
+
+    @property
+    def available(self):
+        return self.token is not None
 
 
 load_dotenv()

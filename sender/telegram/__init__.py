@@ -5,7 +5,7 @@
 # @Software: PyCharm
 
 from loguru import logger
-from telebot import formatting
+from telebot import formatting, util
 from telebot import types
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
@@ -29,10 +29,15 @@ __default_function_enable__ = True
 
 class TelegramBotRunner(object):
     def __init__(self):
-        self.bot = AsyncTeleBot(BotSetting.token, state_storage=StepCache)
-        self.proxy = BotSetting.proxy_address
+        self.bot = None
+        self.proxy = None
 
     def telegram(self):
+        if not BotSetting.available:
+            logger.warning("Sender Runtime:TelegramBot Setting not available")
+            return None
+        self.bot = AsyncTeleBot(BotSetting.token, state_storage=StepCache)
+        self.proxy = BotSetting.proxy_address
         bot = self.bot
         if self.proxy:
             from telebot import asyncio_helper
@@ -267,5 +272,10 @@ class TelegramBotRunner(object):
         bot.add_custom_filter(asyncio_filters.IsAdminFilter(bot))
         bot.add_custom_filter(asyncio_filters.ChatFilter())
         bot.add_custom_filter(asyncio_filters.StateFilter(bot))
-
-        return bot
+        logger.success("Sender Runtime:TelegramBot start")
+        bot.infinity_polling(
+            allowed_updates=util.update_types,
+            skip_pending=True,
+            timeout=60,
+            request_timeout=60
+        )

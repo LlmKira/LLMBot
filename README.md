@@ -76,6 +76,8 @@ pm2 start pm2.json
 
 ```bash
 cp .env.example .env
+nano .env
+
 ```
 
 - ⚙️ 安装依赖

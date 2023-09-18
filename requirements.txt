@@ -16,7 +16,8 @@ elara
 redis>=4.5.4
 aio_pika
 
-#
+# utils
+arclet-alconna
 shortuuid
 tiktoken
 nest-asyncio

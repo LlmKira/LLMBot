@@ -3,6 +3,10 @@
 # @Author  : sudoskys
 # @File    : rss.py
 # @Software: PyCharm
+
+
+# 这里其实是一个推送的单端实例，主要展示了 Router 的用法，让不同平台的推送可以通过 Router 进行交换
+
 import asyncio
 import json
 import socket
@@ -86,6 +90,7 @@ class RssApp(object):
                 continue
 
     async def rss_polling(self, interval=60 * 60 * 1):
+        logger.success("Sender Runtime:RSS Checker start")
         while True:
             # RSS 休眠
             await asyncio.sleep(interval)

@@ -45,4 +45,5 @@ class FunctionReceiver(object):
         await _tool().run(task=_task, receiver=_task.receiver, arg=_arg)
 
     async def function(self):
+        logger.success("Receiver Runtime:Function Fork Cpu start")
         await self.task.consuming_task(self.on_message)

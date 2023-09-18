@@ -5,6 +5,7 @@
 # @Software: PyCharm
 import tzlocal
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from loguru import logger
 
 job_defaults = {
     'coalesce': True,
@@ -14,4 +15,5 @@ SCHEDULER = AsyncIOScheduler(job_defaults=job_defaults, timezone=str(tzlocal.get
 
 
 async def aps_start():
+    logger.success("Receiver Runtime:APS Timer start")
     SCHEDULER.start()

@@ -201,4 +201,7 @@ class TelegramReceiver(object):
         return
 
     async def telegram(self):
+        if not BotSetting.available:
+            logger.warning("Receiver Runtime:TelegramBot Setting not available")
+            return None
         await self.task.consuming_task(self.on_message)
