@@ -1,5 +1,10 @@
 # LLMBot
 
+
+## This Project is a conceptual prototype and cannot be deployed.
+## GO https://github.com/LlmKira/Openaibot Check the Production.
+
+
 ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/sudoskys/llmbot/latest)
 ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/sudoskys/llmbot)
 ![docker workflow](https://github.com/llmkira/llmbot/actions/workflows/docker-ci.yaml/badge.svg)
